@@ -3,6 +3,10 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
 
 jobs:
   deploy:
@@ -14,12 +18,37 @@ jobs:
         with:
           node-version: 20
 
-      - name: Write service account key
-        run: echo "$FIREBASE_SERVICE_ACCOUNT" > /tmp/service-account.json
+      - name: Validate service account secret
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "FIREBASE_SERVICE_ACCOUNT secret is empty or missing" >&2
+            exit 1
+          fi
+          echo "$FIREBASE_SERVICE_ACCOUNT" > /tmp/service-account.json
+          python3 -c "import json; d=json.load(open('/tmp/service-account.json')); print('service account file looks valid, client_email:', d.get('client_email'))"
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
       - name: Deploy
-        run: npx firebase-tools deploy --only hosting,firestore --project ourwrapsheet --non-interactive
+        run: |
+          set +e
+          npx firebase-tools deploy --only hosting,firestore --project ourwrapsheet --non-interactive > /tmp/deploy.log 2>&1
+          echo "EXIT_CODE=$?" >> /tmp/deploy.log
+          cat /tmp/deploy.log
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/service-account.json
+
+      - name: Save deploy log to repo
+        if: always()
+        run: |
+          mkdir -p .deploy-logs
+          cp /tmp/deploy.log .deploy-logs/last-run.txt
+          git config user.email "actions@github.com"
+          git config user.name "github-actions"
+          git add .deploy-logs/last-run.txt
+          git commit -m "chore: deploy log [skip ci]" || echo "nothing to commit"
+          git push || echo "push failed, continuing"
+
+      - name: Fail job if deploy failed
+        run: |
+          tail -1 /tmp/deploy.log | grep -q "EXIT_CODE=0"
