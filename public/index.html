@@ -710,7 +710,6 @@ const dbase = getFirestore(app);
         return (String(g.title) + " " + String(g.notes || "")).toLowerCase().indexOf(q) >= 0;
       }).sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
       if (state.personFilter === "all" && filtering && !gifts.length && !pMatch) return;
-      if (state.personFilter === "all" && filtering && !gifts.length && state.filter !== "all") return;
       shown++; grid.appendChild(personCard(p, gifts));
     });
     app.appendChild(shown ? grid : h("div", { class: "blank", text: "Nothing matches that filter." }));
@@ -827,10 +826,12 @@ const dbase = getFirestore(app);
       if (b.ownerUid === state.uid) {
         actionsRow.appendChild(h("button", { class: "btn link", type: "button", text: "Duplicate", onclick: function (e) {
           e.stopPropagation();
-          duplicateBoard(b);
+          if (e.target.disabled) return;
+          e.target.disabled = true; e.target.textContent = "Duplicating…";
+          duplicateBoard(b, e.target);
         } }));
       }
-      var card = h("div", { class: "list-card", tabindex: "0", role: "button", "aria-label": "Open " + (b.name || "list"), onclick: function () { navigate("/b/" + b.id); }, onkeydown: function (e) { if (e.key === "Enter") navigate("/b/" + b.id); } },
+      var card = h("div", { class: "list-card", tabindex: "0", role: "button", "aria-label": "Open " + (b.name || "list"), onclick: function () { navigate("/b/" + b.id); }, onkeydown: function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate("/b/" + b.id); } } },
         h("h3", { text: b.name || "Untitled list" }),
         h("span", { class: "role", text: b.ownerUid === state.uid ? "You created this" : "Shared with you" }),
         actionsRow);
@@ -841,25 +842,31 @@ const dbase = getFirestore(app);
 
   function createListModal() {
     var name = h("input", { id: "l-name", type: "text", maxlength: "60", placeholder: "Smith Family Christmas" });
+    var createBtn = h("button", { class: "btn primary", type: "submit", text: "Create" });
     var form = h("form", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": "Create new list", onsubmit: function (e) {
       e.preventDefault();
+      if (createBtn.disabled) return;
       var n = name.value.trim(); if (!n) { name.focus(); return; }
       var id = randomBoardId();
+      createBtn.disabled = true; createBtn.textContent = "Creating…";
       Promise.all([
         setDoc(doc(dbase, "boards", id), { name: n, ownerUid: state.uid, ownerName: state.name, createdAt: Date.now() }),
         setDoc(doc(dbase, "users", state.uid, "boards", id), { name: n, ownerUid: state.uid, joinedAt: Date.now() })
-      ]).then(function () { closeModal(); navigate("/b/" + id); }, function (err) { console.error(err); toast("Couldn't create the list. Try again."); });
+      ]).then(function () { closeModal(); navigate("/b/" + id); }, function (err) {
+        console.error(err); toast("Couldn't create the list. Try again.");
+        createBtn.disabled = false; createBtn.textContent = "Create";
+      });
     } },
       h("h3", { text: "Create new list" }),
       field("l-name", "List name", name),
       h("div", { class: "actions" },
-        h("button", { class: "btn primary", type: "submit", text: "Create" }),
+        createBtn,
         h("button", { class: "btn", type: "button", text: "Cancel", onclick: closeModal })));
     openModal(form, "l-name");
   }
 
-  function duplicateBoard(b) {
-    toast("Duplicating " + (b.name || "list") + "…");
+  function duplicateBoard(b, btn) {
+    function resetBtn() { if (btn) { btn.disabled = false; btn.textContent = "Duplicate"; } }
     getDocs(collection(dbase, "boards", b.id, "people")).then(function (snap) {
       var id = randomBoardId();
       var newName = (b.name || "Untitled list") + " (copy)";
@@ -871,22 +878,26 @@ const dbase = getFirestore(app);
         var pd = d.data();
         ops.push(addDoc(collection(dbase, "boards", id, "people"), { name: pd.name, group: pd.group || "Family", budget: pd.budget != null ? pd.budget : null, notes: pd.notes || "", createdAt: Date.now() }));
       });
-      Promise.all(ops).then(function () { navigate("/b/" + id); toast("List duplicated — add this year's ideas."); }, function (err) { console.error(err); toast("Couldn't duplicate the list."); });
-    }, function (err) { console.error(err); toast("Couldn't duplicate the list."); });
+      Promise.all(ops).then(function () { navigate("/b/" + id); toast("List duplicated — add this year's ideas."); }, function (err) { console.error(err); toast("Couldn't duplicate the list."); resetBtn(); });
+    }, function (err) { console.error(err); toast("Couldn't duplicate the list."); resetBtn(); });
   }
   $("#create-list").addEventListener("click", createListModal);
   $("#join-form").addEventListener("submit", function (e) {
     e.preventDefault();
+    var joinBtn = $("#join-form button[type=submit]");
+    if (joinBtn.disabled) return;
     var id = joinBoardId($("#join-input").value);
     if (!id) { toast("That doesn't look like a valid invite link."); return; }
+    joinBtn.disabled = true;
     getDoc(doc(dbase, "boards", id)).then(function (snap) {
-      if (!snap.exists()) { toast("That list doesn't exist, or the link's wrong."); return; }
+      if (!snap.exists()) { toast("That list doesn't exist, or the link's wrong."); joinBtn.disabled = false; return; }
       var data = snap.data();
       setDoc(doc(dbase, "users", state.uid, "boards", id), { name: data.name || "Untitled list", ownerUid: data.ownerUid || null, joinedAt: Date.now() }).then(function () {
         $("#join-input").value = "";
+        joinBtn.disabled = false;
         navigate("/b/" + id);
       });
-    }, function (err) { console.error(err); toast("Couldn't check that link. Try again."); });
+    }, function (err) { console.error(err); toast("Couldn't check that link. Try again."); joinBtn.disabled = false; });
   });
   $("#back-home").addEventListener("click", function () { navigate("/"); });
 
