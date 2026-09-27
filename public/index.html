@@ -299,7 +299,7 @@ const dbase = getFirestore(app);
   var GROUPS = ["Family", "Friends", "Neighbors", "Other"];
   var state = { people: [], gifts: [], gotP: false, gotG: false, filter: "all", q: "", uid: null, name: "you", error: "", boardName: "" };
   var toastTimer = null;
-  var boardId = null, unsubP = null, unsubG = null;
+  var boardId = null, unsubP = null, unsubG = null, enrichAttempted = {};
 
   var $ = function (s) { return document.querySelector(s); };
   function h(tag, attrs) {
@@ -358,7 +358,10 @@ const dbase = getFirestore(app);
       .then(function (j) {
         if (!j || j.status !== "success" || !j.data) return null;
         var img = (j.data.image && j.data.image.url) || (j.data.logo && j.data.logo.url) || "";
-        return { title: j.data.title || "", image: img };
+        var priceRaw = j.data.price;
+        var price = priceRaw != null && priceRaw !== "" ? parseFloat(String(priceRaw).replace(/[^0-9.]/g, "")) : null;
+        if (price == null || !isFinite(price)) price = null;
+        return { title: j.data.title || "", image: img, price: price };
       })
       .catch(function () { return null; });
   }
@@ -444,11 +447,12 @@ const dbase = getFirestore(app);
     var pendingImage = gift.imageUrl || "";
     url.addEventListener("blur", function () {
       var u = safeUrl(url.value);
-      if (!u || (title.value.trim() && pendingImage)) return;
+      if (!u || (title.value.trim() && pendingImage && price.value)) return;
       fetchLinkMeta(u).then(function (meta) {
         if (!meta) return;
         if (!title.value.trim() && meta.title) title.value = meta.title;
         if (meta.image) pendingImage = meta.image;
+        if (!price.value && meta.price != null) price.value = meta.price;
       });
     });
     var confirmDel = false;
@@ -734,6 +738,7 @@ const dbase = getFirestore(app);
           var patch = {};
           if (meta.title && data.title === guessedTitle) patch.title = meta.title;
           if (meta.image) patch.imageUrl = meta.image;
+          if (meta.price != null) patch.price = meta.price;
           if (Object.keys(patch).length) updateDoc(ref, patch).catch(function (e) { console.error(e); });
         });
       }
@@ -914,6 +919,18 @@ const dbase = getFirestore(app);
     unsubG = onSnapshot(giftsCol(), function (snap) {
       state.gifts = snap.docs.map(function (d) { return Object.assign({}, d.data(), { id: d.id }); });
       state.gotG = true; render();
+      state.gifts.forEach(function (g) {
+        if (!g.url || g.imageUrl || enrichAttempted[g.id]) return;
+        enrichAttempted[g.id] = true;
+        fetchLinkMeta(g.url).then(function (meta) {
+          if (!meta) return;
+          var patch = {};
+          if (meta.title && (!g.title || g.title === "Shared idea" || g.title === "New idea")) patch.title = meta.title;
+          if (meta.image) patch.imageUrl = meta.image;
+          if (meta.price != null && g.price == null) patch.price = meta.price;
+          if (Object.keys(patch).length) updateDoc(giftDoc(g.id), patch).catch(function (e) { console.error(e); });
+        });
+      });
     }, fail);
 
     render();
