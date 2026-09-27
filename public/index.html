@@ -152,6 +152,22 @@ img { max-width: 100%; }
 .p-foot { padding: 10px 14px; border-top: 1px solid var(--line); background: var(--surface-2); display: flex; justify-content: space-between; }
 .p-foot .btn { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; border-color: transparent; box-shadow: none; }
 
+.prefs { color: var(--muted); font-size: .8rem; overflow-wrap: anywhere; }
+.owner-row { padding: 8px 18px 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.owner-badge { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); border-radius: 999px; padding: 3px 9px; }
+.surprise-banner { margin: 0 18px 6px; padding: 9px 13px; border-radius: 12px; background: var(--surface-2); color: var(--muted); font-size: .78rem; }
+.pill.hidden-status { background: var(--surface-2); color: var(--muted); cursor: default; }
+.g-line { display: flex; gap: 10px; align-items: flex-start; }
+.g-thumb { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; background: var(--surface-2); flex: none; margin-top: 1px; }
+.g-claim { font-size: .75rem; margin-top: 2px; }
+.g-claim button { border: 0; background: transparent; color: var(--idea); font-weight: 600; cursor: pointer; padding: 0; }
+.g-claim.claimed { color: var(--muted); font-weight: 500; }
+.toast-row { display: flex; align-items: center; gap: 12px; }
+.toast-row button { border: 0; background: transparent; color: var(--bg); font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0; white-space: nowrap; }
+.activity-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto; }
+.activity-list li { font-size: .85rem; color: var(--ink); border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.activity-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+.activity-list .when { color: var(--muted); font-size: .72rem; margin-top: 2px; }
 .blank { text-align: center; color: var(--muted); padding: 44px 16px; border: 1.5px dashed var(--line); border-radius: 20px; background: var(--surface-2); }
 
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.42); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; z-index: 10; }
@@ -240,6 +256,7 @@ img { max-width: 100%; }
     <div class="chips" id="chips" role="group" aria-label="Filter by status"></div>
     <input class="search" id="search" type="search" placeholder="Search gifts or people" aria-label="Search gifts or people">
     <span class="spacer"></span>
+    <button class="btn" id="show-activity" type="button">Activity</button>
     <button class="btn" id="add-person" type="button">Add person</button>
     <button class="btn primary" id="add-gift" type="button">Add gift</button>
   </div>
@@ -257,7 +274,8 @@ import {
   getRedirectResult, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {
-  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, setDoc, getDoc, onSnapshot, serverTimestamp
+  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, setDoc, getDoc, getDocs, onSnapshot, serverTimestamp,
+  query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 // --- Fill this in with the config from Firebase console > Project settings > Your apps ---
@@ -308,11 +326,42 @@ const dbase = getFirestore(app);
     if (!/^https?:\/\//i.test(u)) u = "https://" + u;
     try { var p = new URL(u); return /^https?:$/.test(p.protocol) ? p.href : ""; } catch (e) { return ""; }
   }
-  function toast(msg) {
-    var t = $("#toast"); t.textContent = msg; t.hidden = false;
-    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 3500);
+  function toast(msg, opts) {
+    opts = opts || {};
+    var t = $("#toast"); t.textContent = "";
+    var row = h("div", { class: "toast-row" }, h("span", { text: msg }));
+    if (opts.actionLabel && opts.onAction) {
+      row.appendChild(h("button", { type: "button", text: opts.actionLabel, onclick: function () {
+        t.hidden = true; clearTimeout(toastTimer); opts.onAction();
+      } }));
+    }
+    t.appendChild(row); t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, opts.duration || 3500);
   }
   function nameOf(who) { return who === state.uid ? "you" : (who && state.names && state.names[who]) || who || ""; }
+  function timeAgo(ts) {
+    if (!ts) return "";
+    var m = Math.round((Date.now() - ts) / 60000);
+    if (m < 1) return "Just now";
+    if (m < 60) return m + "m ago";
+    var hrs = Math.round(m / 60);
+    if (hrs < 24) return hrs + "h ago";
+    return Math.round(hrs / 24) + "d ago";
+  }
+  function logActivity(text) {
+    if (!boardId) return;
+    addDoc(collection(dbase, "boards", boardId, "activity"), { text: text, name: state.name, uid: state.uid, createdAt: Date.now() }).catch(function (e) { console.error(e); });
+  }
+  function fetchLinkMeta(url) {
+    return fetch("https://api.microlink.io/?url=" + encodeURIComponent(url) + "&palette=false")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || j.status !== "success" || !j.data) return null;
+        var img = (j.data.image && j.data.image.url) || (j.data.logo && j.data.logo.url) || "";
+        return { title: j.data.title || "", image: img };
+      })
+      .catch(function () { return null; });
+  }
 
   /* countdown */
   (function () {
@@ -352,7 +401,25 @@ const dbase = getFirestore(app);
     var next = STATUS[(STATUS.indexOf(g.status) + 1) % STATUS.length];
     var patch = { status: next };
     patch.boughtBy = next === "bought" ? state.name : null;
-    guard(updateDoc(giftDoc(g.id), patch));
+    guard(updateDoc(giftDoc(g.id), patch)).then(function (ok) {
+      if (ok) logActivity(state.name + " marked “" + g.title + "” as " + LABEL[next]);
+    });
+  }
+  function claimControl(g) {
+    if (g.claimedByUid) {
+      if (g.claimedByUid === state.uid) {
+        return h("div", { class: "g-claim claimed" }, "You claimed this · ",
+          h("button", { type: "button", text: "Release", onclick: function () {
+            guard(updateDoc(giftDoc(g.id), { claimedByUid: null, claimedByName: null }), "Released");
+          } }));
+      }
+      return h("div", { class: "g-claim claimed", text: "Claimed by " + (g.claimedByName || "someone") });
+    }
+    if (g.status !== "idea") return null;
+    return h("div", { class: "g-claim" }, h("button", { type: "button", text: "I'll get this", onclick: function () {
+      guard(updateDoc(giftDoc(g.id), { claimedByUid: state.uid, claimedByName: state.name }), "Claimed — you've got this one");
+      logActivity(state.name + " claimed “" + g.title + "”");
+    } }));
   }
 
   function closeModal() { $("#overlay").hidden = true; $("#overlay").textContent = ""; }
@@ -374,16 +441,35 @@ const dbase = getFirestore(app);
     var price = h("input", { id: "g-price", type: "number", min: "0", step: "0.01", inputmode: "decimal", placeholder: "0", value: gift.price != null ? gift.price : "" });
     var url = h("input", { id: "g-url", type: "text", maxlength: "500", placeholder: "amazon.com/...", value: gift.url || "" });
     var notes = h("textarea", { id: "g-notes", maxlength: "500", placeholder: "Size, color, where you saw it" }, gift.notes || "");
+    var pendingImage = gift.imageUrl || "";
+    url.addEventListener("blur", function () {
+      var u = safeUrl(url.value);
+      if (!u || (title.value.trim() && pendingImage)) return;
+      fetchLinkMeta(u).then(function (meta) {
+        if (!meta) return;
+        if (!title.value.trim() && meta.title) title.value = meta.title;
+        if (meta.image) pendingImage = meta.image;
+      });
+    });
     var confirmDel = false;
     var del = editing ? h("button", { class: "btn danger", type: "button", text: "Delete", onclick: function (e) {
       if (!confirmDel) { confirmDel = true; e.target.textContent = "Tap again to delete"; return; }
-      guard(deleteDoc(giftDoc(gift.id)), "Gift deleted"); closeModal();
+      var snapshot = Object.assign({}, gift), gid = gift.id;
+      guard(deleteDoc(giftDoc(gid))).then(function (ok) {
+        if (!ok) return;
+        toast("Gift deleted", { actionLabel: "Undo", duration: 6000, onAction: function () {
+          var restore = Object.assign({}, snapshot); delete restore.id;
+          guard(setDoc(giftDoc(gid), restore), "Restored");
+        } });
+      });
+      closeModal();
     } }) : null;
     var form = h("form", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": editing ? "Edit gift" : "Add gift", onsubmit: function (e) {
       e.preventDefault();
       var t = title.value.trim(); if (!t) { title.focus(); return; }
-      var data = { personId: sel.value, title: t, price: num(price.value), url: safeUrl(url.value), notes: notes.value.trim(), status: st.value };
-      var p;
+      var personName = (people.filter(function (pp) { return pp.id === sel.value; })[0] || {}).name || "";
+      var data = { personId: sel.value, title: t, price: num(price.value), url: safeUrl(url.value), notes: notes.value.trim(), status: st.value, imageUrl: pendingImage || null };
+      var p, statusChanged = editing && gift.status !== data.status;
       if (editing) {
         if (data.status === "bought" && gift.status === "idea") data.boughtBy = state.name;
         if (data.status === "idea") data.boughtBy = null;
@@ -392,7 +478,12 @@ const dbase = getFirestore(app);
         data.addedBy = state.name; data.boughtBy = data.status === "idea" ? null : state.name; data.createdAt = Date.now();
         p = addDoc(giftsCol(), data);
       }
-      guard(p, editing ? "Gift updated" : "Gift added"); closeModal();
+      guard(p, editing ? "Gift updated" : "Gift added").then(function (ok) {
+        if (!ok) return;
+        if (!editing) logActivity(state.name + " added “" + t + "” for " + personName);
+        else if (statusChanged) logActivity(state.name + " marked “" + t + "” as " + LABEL[data.status]);
+      });
+      closeModal();
     } },
       h("h3", { text: editing ? "Edit gift" : "Add gift" }),
       field("g-person", "For", sel),
@@ -413,25 +504,41 @@ const dbase = getFirestore(app);
     var grp = h("select", { id: "p-group" });
     GROUPS.forEach(function (g) { var o = h("option", { value: g, text: g }); if (g === (person.group || "Family")) o.selected = true; grp.appendChild(o); });
     var budget = h("input", { id: "p-budget", type: "number", min: "0", step: "1", inputmode: "decimal", placeholder: "Optional", value: person.budget != null ? person.budget : "" });
+    var prefs = h("textarea", { id: "p-notes", maxlength: "300", placeholder: "Sizes, favorite colors, allergies, wish-list notes..." }, person.notes || "");
     var confirmDel = false;
     var del = editing ? h("button", { class: "btn danger", type: "button", text: "Delete person", onclick: function (e) {
       if (!confirmDel) { confirmDel = true; var n = personGifts(person.id).length; e.target.textContent = n ? "Tap again to delete with " + n + " gift" + (n > 1 ? "s" : "") : "Tap again to delete"; return; }
-      var ops = personGifts(person.id).map(function (g) { return deleteDoc(giftDoc(g.id)); });
-      ops.push(deleteDoc(personDoc(person.id)));
-      guard(Promise.all(ops), "Removed"); closeModal();
+      var pid = person.id, personSnap = Object.assign({}, person);
+      var giftsSnap = personGifts(pid).map(function (g) { return Object.assign({}, g); });
+      var ops = giftsSnap.map(function (g) { return deleteDoc(giftDoc(g.id)); });
+      ops.push(deleteDoc(personDoc(pid)));
+      guard(Promise.all(ops)).then(function (ok) {
+        if (!ok) return;
+        toast(person.name + " removed", { actionLabel: "Undo", duration: 6000, onAction: function () {
+          var restorePerson = Object.assign({}, personSnap); delete restorePerson.id;
+          var restoreOps = [setDoc(personDoc(pid), restorePerson)];
+          giftsSnap.forEach(function (g) { var rg = Object.assign({}, g), gid = rg.id; delete rg.id; restoreOps.push(setDoc(giftDoc(gid), rg)); });
+          guard(Promise.all(restoreOps), "Restored");
+        } });
+      });
+      closeModal();
     } }) : null;
     var form = h("form", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": editing ? "Edit person" : "Add person", onsubmit: function (e) {
       e.preventDefault();
       var n = name.value.trim(); if (!n) { name.focus(); return; }
-      var data = { name: n, group: grp.value, budget: num(budget.value) };
+      var data = { name: n, group: grp.value, budget: num(budget.value), notes: prefs.value.trim() };
       var p;
       if (editing) p = updateDoc(personDoc(person.id), data);
       else { data.createdAt = Date.now(); p = addDoc(peopleCol(), data); }
-      guard(p, editing ? "Saved" : n + " added"); closeModal();
+      guard(p, editing ? "Saved" : n + " added").then(function (ok) {
+        if (ok && !editing) logActivity(state.name + " added " + n + " to the list");
+      });
+      closeModal();
     } },
       h("h3", { text: editing ? "Edit person" : "Add person" }),
       field("p-name", "Name", name),
       h("div", { class: "row2" }, field("p-group", "Group", grp), field("p-budget", "Budget (USD)", budget)),
+      field("p-notes", "Gift preferences (optional)", prefs),
       h("div", { class: "actions" },
         h("button", { class: "btn primary", type: "submit", text: editing ? "Save" : "Add person" }),
         h("button", { class: "btn", type: "button", text: "Cancel", onclick: closeModal }),
@@ -461,20 +568,27 @@ const dbase = getFirestore(app);
     });
   }
 
-  function giftRow(g) {
+  function giftRow(g, mine) {
     var meta = [];
-    if (g.addedBy) meta.push("Added by " + g.addedBy);
-    if (g.status !== "idea" && g.boughtBy) meta.push("Bought by " + g.boughtBy);
+    if (!mine) {
+      if (g.addedBy) meta.push("Added by " + g.addedBy);
+      if (g.status !== "idea" && g.boughtBy) meta.push("Bought by " + g.boughtBy);
+    }
     var url = safeUrl(g.url);
-    var pill = h("button", { class: "pill", type: "button", "data-s": g.status || "idea", text: LABEL[g.status] || "Idea", title: "Tap to change status", onclick: function () { cycleStatus(g); } });
+    var pill = mine
+      ? h("span", { class: "pill hidden-status", text: "🎁", title: "Hidden to keep it a surprise" })
+      : h("button", { class: "pill", type: "button", "data-s": g.status || "idea", text: LABEL[g.status] || "Idea", title: "Tap to change status", onclick: function () { cycleStatus(g); } });
+    var thumb = g.imageUrl ? h("img", { class: "g-thumb", src: g.imageUrl, alt: "", loading: "lazy" }) : null;
     return h("li", { class: "gift" },
       pill,
-      h("div", { class: "g-main" },
-        h("div", { class: "g-title" }, url ? h("a", { href: url, target: "_blank", rel: "noopener noreferrer", text: g.title }) : g.title),
-        g.notes ? h("div", { class: "g-note", text: g.notes }) : null,
-        meta.length ? h("div", { class: "g-meta", text: meta.join(" · ") }) : null),
+      h("div", { class: "g-main" }, h("div", { class: "g-line" }, thumb,
+        h("div", {},
+          h("div", { class: "g-title" }, url ? h("a", { href: url, target: "_blank", rel: "noopener noreferrer", text: g.title }) : g.title),
+          g.notes ? h("div", { class: "g-note", text: g.notes }) : null,
+          meta.length ? h("div", { class: "g-meta", text: meta.join(" · ") }) : null))),
       h("div", { class: "g-side" },
-        g.price != null ? h("span", { class: "g-price", text: money(g.price) }) : null,
+        !mine && g.price != null ? h("span", { class: "g-price", text: money(g.price) }) : null,
+        !mine ? claimControl(g) : null,
         h("button", { class: "btn link", type: "button", text: "Edit", onclick: function () { giftModal(g); } })));
   }
 
@@ -483,7 +597,7 @@ const dbase = getFirestore(app);
       h("div", { class: "p-title" }, h("h2", { text: "Unsorted ideas" }), h("span", { class: "group", text: "From the share sheet" })));
     var card = h("article", { class: "person" }, head);
     var ul = h("ul", { class: "gifts" });
-    gifts.forEach(function (g) { ul.appendChild(giftRow(g)); });
+    gifts.forEach(function (g) { ul.appendChild(giftRow(g, false)); });
     card.appendChild(ul);
     card.appendChild(h("div", { class: "p-foot" },
       h("span", { class: "btn link", text: "Tap Edit on an idea to assign it to someone" }),
@@ -492,26 +606,43 @@ const dbase = getFirestore(app);
   }
 
   function personCard(p, gifts) {
+    var mine = !!(p.ownerUid && p.ownerUid === state.uid);
     var spent = spentFor(p.id), planned = personGifts(p.id).reduce(function (s, g) { return s + (g.status === "idea" && g.price ? g.price : 0); }, 0);
     var head = h("div", { class: "p-head" },
       h("div", { class: "p-title" }, h("h2", { text: p.name }), h("span", { class: "group", text: p.group || "" })));
-    if (p.budget) {
+    if (p.notes) head.appendChild(h("div", { class: "prefs", text: p.notes }));
+    if (!mine && p.budget) {
       var pct = Math.min(100, Math.round(spent / p.budget * 100)), over = spent > p.budget;
       head.appendChild(h("div", { class: "budget" },
         h("div", {}, money(spent) + " of " + money(p.budget) + " spent", over ? h("span", { class: "over-text", text: " · " + money(spent - p.budget) + " over" }) : null, planned ? " · " + money(planned) + " in ideas" : ""),
         h("div", { class: "meter" + (over ? " over" : ""), role: "img", "aria-label": pct + " percent of budget spent" }, h("i", { style: "width:" + pct + "%" }))));
-    } else if (spent || planned) {
+    } else if (!mine && (spent || planned)) {
       head.appendChild(h("div", { class: "budget" }, money(spent) + " spent" + (planned ? " · " + money(planned) + " in ideas" : "")));
     }
     var card = h("article", { class: "person" }, head);
+    if (mine) card.appendChild(h("div", { class: "surprise-banner", text: "🎁 This is your list — status, price and who's buying are hidden so it stays a surprise." }));
     if (gifts.length) {
       var ul = h("ul", { class: "gifts" });
-      gifts.forEach(function (g) { ul.appendChild(giftRow(g)); });
+      gifts.forEach(function (g) { ul.appendChild(giftRow(g, mine)); });
       card.appendChild(ul);
-    } else card.appendChild(h("div", { class: "empty", text: personGifts(p.id).length ? "No gifts match this filter." : "No ideas yet." }));
+    } else card.appendChild(h("div", { class: "empty", text: personGifts(p.id).length ? "No gifts match this filter." : "No ideas yet — add one, or forward a link from Safari with the WrapSheet Shortcut." }));
     card.appendChild(h("div", { class: "p-foot" },
       h("button", { class: "btn", type: "button", text: "Add gift", onclick: function () { giftModal(null, p.id); } }),
       h("button", { class: "btn link", type: "button", text: "Edit person", onclick: function () { personModal(p); } })));
+    var ownerRow = h("div", { class: "owner-row" });
+    if (mine) {
+      ownerRow.appendChild(h("span", { class: "owner-badge", text: "This is you" }));
+      ownerRow.appendChild(h("button", { class: "btn link", type: "button", text: "Not you? Unlink", onclick: function () {
+        guard(updateDoc(personDoc(p.id), { ownerUid: null, ownerName: null }), "Unlinked");
+      } }));
+    } else if (!p.ownerUid) {
+      ownerRow.appendChild(h("button", { class: "btn link", type: "button", text: "This is me", onclick: function () {
+        guard(updateDoc(personDoc(p.id), { ownerUid: state.uid, ownerName: state.name }), "Linked — your list will be kept a surprise");
+      } }));
+    } else {
+      ownerRow.appendChild(h("span", { class: "owner-badge", text: (p.ownerName || "Someone") + " is this person" }));
+    }
+    card.appendChild(ownerRow);
     return card;
   }
 
@@ -534,7 +665,7 @@ const dbase = getFirestore(app);
     if (!state.gotP || !state.gotG) { app.appendChild(h("div", { class: "blank", text: "Loading your list..." })); return; }
     var hasUnsorted = state.gifts.some(function (g) { return !g.personId; });
     if (!state.people.length && !hasUnsorted) {
-      app.appendChild(h("div", { class: "blank", text: "No one on the list yet. Use Add person to start." }));
+      app.appendChild(h("div", { class: "blank", text: "No one on the list yet. Tap Add person to start, or forward a product link from Safari with the WrapSheet Shortcut." }));
       return;
     }
     var q = state.q.trim().toLowerCase(), filtering = state.filter !== "all" || !!q;
@@ -590,14 +721,41 @@ const dbase = getFirestore(app);
     if (!raw) { $("#q-link").focus(); return; }
     if (!pid) { toast("Add a person first."); return; }
     var link = /^(https?:\/\/|www\.)\S+$/i.test(raw) ? safeUrl(raw) : "";
-    var data = { personId: pid, title: link ? (guessTitle(link) || "New idea") : raw.slice(0, 120), price: null, url: link, notes: "", status: "idea", addedBy: state.name, boughtBy: null, createdAt: Date.now() };
+    var guessedTitle = link ? (guessTitle(link) || "New idea") : raw.slice(0, 120);
+    var data = { personId: pid, title: guessedTitle, price: null, url: link, notes: "", status: "idea", addedBy: state.name, boughtBy: null, createdAt: Date.now(), imageUrl: null };
     var pName = (state.people.filter(function (p) { return p.id === pid; })[0] || {}).name || "";
-    guard(addDoc(giftsCol(), data)).then(function (ok) {
-      if (!ok) return;
+    addDoc(giftsCol(), data).then(function (ref) {
       $("#q-link").value = "";
       toast("Added to " + pName + "'s ideas.");
-    });
+      logActivity(state.name + " added an idea for " + pName);
+      if (link) {
+        fetchLinkMeta(link).then(function (meta) {
+          if (!meta) return;
+          var patch = {};
+          if (meta.title && data.title === guessedTitle) patch.title = meta.title;
+          if (meta.image) patch.imageUrl = meta.image;
+          if (Object.keys(patch).length) updateDoc(ref, patch).catch(function (e) { console.error(e); });
+        });
+      }
+    }, function (e) { console.error(e); toast("That didn't save (" + (e && e.code || "error") + "). Try again."); });
   });
+  function activityModal() {
+    var list = h("ul", { class: "activity-list" }, h("li", { text: "Loading…" }));
+    var form = h("div", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": "Recent activity" },
+      h("h3", { text: "Recent activity" }),
+      list,
+      h("div", { class: "actions" }, h("button", { class: "btn", type: "button", text: "Close", onclick: closeModal })));
+    openModal(form);
+    getDocs(query(collection(dbase, "boards", boardId, "activity"), orderBy("createdAt", "desc"), limit(30))).then(function (snap) {
+      list.textContent = "";
+      if (snap.empty) { list.appendChild(h("li", { text: "Nothing yet — activity shows up here as people add and update gifts." })); return; }
+      snap.docs.forEach(function (d) {
+        var a = d.data();
+        list.appendChild(h("li", {}, a.text || "", h("div", { class: "when", text: timeAgo(a.createdAt) })));
+      });
+    }, function (e) { console.error(e); list.textContent = ""; list.appendChild(h("li", { text: "Couldn't load activity." })); });
+  }
+  $("#show-activity").addEventListener("click", activityModal);
   $("#search").addEventListener("input", function (e) { state.q = e.target.value; render(); });
   $("#add-person").addEventListener("click", function () { personModal(); });
   $("#add-gift").addEventListener("click", function () { giftModal(); });
@@ -625,13 +783,21 @@ const dbase = getFirestore(app);
     }
     var grid = h("div", { class: "lists" });
     homeState.boards.slice().sort(function (a, b) { return (b.joinedAt || 0) - (a.joinedAt || 0); }).forEach(function (b) {
-      var card = h("div", { class: "list-card", tabindex: "0", role: "button", "aria-label": "Open " + (b.name || "list"), onclick: function () { navigate("/b/" + b.id); }, onkeydown: function (e) { if (e.key === "Enter") navigate("/b/" + b.id); } },
-        h("h3", { text: b.name || "Untitled list" }),
-        h("span", { class: "role", text: b.ownerUid === state.uid ? "You created this" : "Shared with you" }),
+      var actionsRow = h("div", { style: "display:flex; gap:6px; flex-wrap:wrap;" },
         h("button", { class: "btn link leave", type: "button", text: "Remove from my lists", onclick: function (e) {
           e.stopPropagation();
           deleteDoc(doc(dbase, "users", state.uid, "boards", b.id)).catch(function (err) { console.error(err); toast("Couldn't remove that."); });
         } }));
+      if (b.ownerUid === state.uid) {
+        actionsRow.appendChild(h("button", { class: "btn link", type: "button", text: "Duplicate", onclick: function (e) {
+          e.stopPropagation();
+          duplicateBoard(b);
+        } }));
+      }
+      var card = h("div", { class: "list-card", tabindex: "0", role: "button", "aria-label": "Open " + (b.name || "list"), onclick: function () { navigate("/b/" + b.id); }, onkeydown: function (e) { if (e.key === "Enter") navigate("/b/" + b.id); } },
+        h("h3", { text: b.name || "Untitled list" }),
+        h("span", { class: "role", text: b.ownerUid === state.uid ? "You created this" : "Shared with you" }),
+        actionsRow);
       grid.appendChild(card);
     });
     box.appendChild(grid);
@@ -656,6 +822,22 @@ const dbase = getFirestore(app);
     openModal(form, "l-name");
   }
 
+  function duplicateBoard(b) {
+    toast("Duplicating " + (b.name || "list") + "…");
+    getDocs(collection(dbase, "boards", b.id, "people")).then(function (snap) {
+      var id = randomBoardId();
+      var newName = (b.name || "Untitled list") + " (copy)";
+      var ops = [
+        setDoc(doc(dbase, "boards", id), { name: newName, ownerUid: state.uid, ownerName: state.name, createdAt: Date.now() }),
+        setDoc(doc(dbase, "users", state.uid, "boards", id), { name: newName, ownerUid: state.uid, joinedAt: Date.now() })
+      ];
+      snap.docs.forEach(function (d) {
+        var pd = d.data();
+        ops.push(addDoc(collection(dbase, "boards", id, "people"), { name: pd.name, group: pd.group || "Family", budget: pd.budget != null ? pd.budget : null, notes: pd.notes || "", createdAt: Date.now() }));
+      });
+      Promise.all(ops).then(function () { navigate("/b/" + id); toast("List duplicated — add this year's ideas."); }, function (err) { console.error(err); toast("Couldn't duplicate the list."); });
+    }, function (err) { console.error(err); toast("Couldn't duplicate the list."); });
+  }
   $("#create-list").addEventListener("click", createListModal);
   $("#join-form").addEventListener("submit", function (e) {
     e.preventDefault();
