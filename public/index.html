@@ -596,7 +596,7 @@ const dbase = getFirestore(app);
       pill,
       h("div", { class: "g-main" }, h("div", { class: "g-line" }, thumb,
         h("div", {},
-          h("div", { class: "g-title", title: g.title || "" }, url ? h("a", { href: url, target: "_blank", rel: "noopener noreferrer", text: truncate(g.title, 25) }) : truncate(g.title, 25)),
+          h("div", { class: "g-title", title: g.title || "" }, url ? h("a", { href: url, target: "_blank", rel: "noopener noreferrer", text: truncate(g.title, 35) }) : truncate(g.title, 35)),
           g.notes ? h("div", { class: "g-note", text: g.notes }) : null,
           meta.length ? h("div", { class: "g-meta", text: meta.join(" · ") }) : null))),
       h("div", { class: "g-side" },
