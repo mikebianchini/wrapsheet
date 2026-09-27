@@ -343,6 +343,10 @@ const dbase = getFirestore(app);
     s = String(s == null ? "" : s);
     return s.length > n ? s.slice(0, n).replace(/\s+$/, "") + "…" : s;
   }
+  function shortDate(ts) {
+    if (!ts) return "";
+    return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
   function timeAgo(ts) {
     if (!ts) return "";
     var m = Math.round((Date.now() - ts) / 60000);
@@ -361,13 +365,23 @@ const dbase = getFirestore(app);
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         if (!j || j.status !== "success" || !j.data) return null;
-        var t = j.data.title || "";
+        var t = (j.data.title || "").trim();
+        // Some product pages (e.g. Amazon bundle/gallery pages) expose a
+        // useless generic page title but a real product name in the
+        // description. Fall back to that instead.
+        if (!t || /^(product gallery|amazon\.com|untitled|home)$/i.test(t)) {
+          var desc = (j.data.description || "").trim();
+          desc = desc.replace(/^[^:]{1,30}:\s*/, ""); // strip a leading "Amazon.com: " / "Site Name: "
+          var catIdx = desc.lastIndexOf(" : ");
+          if (catIdx > 20) desc = desc.slice(0, catIdx); // strip a trailing " : Electronics" category
+          if (desc) t = desc.trim();
+        }
         if (/^(4|5)\d{2}\b/.test(t) || /\b(bad request|forbidden|not found|access denied|unavailable|error)\b/i.test(t)) return null;
         var img = (j.data.image && j.data.image.url) || (j.data.logo && j.data.logo.url) || "";
         var priceRaw = j.data.price;
         var price = priceRaw != null && priceRaw !== "" ? parseFloat(String(priceRaw).replace(/[^0-9.]/g, "")) : null;
         if (price == null || !isFinite(price)) price = null;
-        return { title: j.data.title || "", image: img, price: price };
+        return { title: t, image: img, price: price };
       })
       .catch(function () { return null; });
   }
@@ -567,7 +581,10 @@ const dbase = getFirestore(app);
   function giftRow(g, mine) {
     var meta = [];
     if (!mine) {
-      if (g.addedBy) meta.push("Added by " + g.addedBy);
+      var addedBits = [];
+      if (g.addedBy) addedBits.push("by " + g.addedBy);
+      if (g.createdAt) addedBits.push(shortDate(g.createdAt));
+      if (addedBits.length) meta.push("Added " + addedBits.join(" · "));
       if (g.status !== "idea" && g.boughtBy) meta.push("Bought by " + g.boughtBy);
     }
     var url = safeUrl(g.url);
