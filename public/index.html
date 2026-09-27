@@ -136,7 +136,7 @@ img { max-width: 100%; }
 .meter.over i { background: #FF3B30; }
 .over-text { color: #FF3B30; font-weight: 600; }
 .gifts { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
-.gift { padding: 15px 18px; display: grid; grid-template-columns: auto 1fr auto; gap: 6px 14px; align-items: center; border-bottom: 1px solid var(--line); }
+.gift { padding: 15px 18px; display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; align-items: center; border-bottom: 1px solid var(--line); }
 .gift:last-child { border-bottom: 0; }
 .pill { border: 0; border-radius: 999px; padding: 4px 9px; font-size: .6rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
 .pill[data-s="idea"] { background: var(--idea-bg); color: var(--idea); }
@@ -593,13 +593,13 @@ const dbase = getFirestore(app);
       : h("button", { class: "pill", type: "button", "data-s": g.status || "idea", text: LABEL[g.status] || "Idea", title: "Tap to change status", onclick: function () { cycleStatus(g); } });
     var thumb = g.imageUrl ? h("img", { class: "g-thumb", src: g.imageUrl, alt: "", loading: "lazy", onerror: function (e) { e.target.style.display = "none"; } }) : null;
     return h("li", { class: "gift" },
-      pill,
       h("div", { class: "g-main" }, h("div", { class: "g-line" }, thumb,
         h("div", {},
           h("div", { class: "g-title", title: g.title || "" }, url ? h("a", { href: url, target: "_blank", rel: "noopener noreferrer", text: truncate(g.title, 35) }) : truncate(g.title, 35)),
           g.notes ? h("div", { class: "g-note", text: g.notes }) : null,
           meta.length ? h("div", { class: "g-meta", text: meta.join(" · ") }) : null))),
       h("div", { class: "g-side" },
+        pill,
         !mine && g.price != null ? h("span", { class: "g-price", text: money(g.price) }) : null,
         h("button", { class: "btn link", type: "button", text: "Edit", onclick: function () { giftModal(g); } })));
   }
