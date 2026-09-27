@@ -258,6 +258,7 @@ img { max-width: 100%; }
     <select class="person-filter" id="person-filter" aria-label="Filter by person"></select>
     <input class="search" id="search" type="search" placeholder="Search gifts or people" aria-label="Search gifts or people">
     <span class="spacer"></span>
+    <button class="btn" id="invite" type="button">Invite</button>
     <button class="btn" id="show-activity" type="button">Activity</button>
     <button class="btn" id="add-person" type="button">Add person</button>
     <button class="btn primary" id="add-gift" type="button">Add gift</button>
@@ -675,11 +676,7 @@ const dbase = getFirestore(app);
     $("#title").textContent = state.boardName || "Gift list";
     var banner = $("#banner"); banner.textContent = "";
     if (state.error) banner.appendChild(h("div", { class: "notice", text: state.error }));
-    else banner.appendChild(h("div", { class: "notice share" },
-      h("span", {}, "Invite anyone: share this link — ", h("code", { text: shareUrl() })),
-      h("button", { class: "btn", type: "button", text: "Copy invite link", onclick: function () {
-        navigator.clipboard.writeText(shareUrl()).then(function () { toast("Link copied"); }, function () { toast("Couldn't copy — select and copy the link above."); });
-      } })));
+    $("#invite").hidden = !!state.error;
     $("#quick").hidden = !!state.error;
     fillQuickPeople(); fillPersonFilter();
     renderStats(); renderChips();
@@ -790,6 +787,19 @@ const dbase = getFirestore(app);
       });
     }, function (e) { console.error(e); list.textContent = ""; list.appendChild(h("li", { text: "Couldn't load activity." })); });
   }
+  function inviteModal() {
+    var link = shareUrl();
+    var form = h("div", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": "Invite to this list" },
+      h("h3", { text: "Invite to this list" }),
+      h("p", { style: "color:var(--muted); margin:0;" }, "Anyone with this link can view and edit the list:"),
+      h("div", { class: "notice share" }, h("code", { text: link }),
+        h("button", { class: "btn primary", type: "button", text: "Copy link", onclick: function () {
+          navigator.clipboard.writeText(link).then(function () { toast("Link copied"); }, function () { toast("Couldn't copy — select the link above and copy it manually."); });
+        } })),
+      h("div", { class: "actions" }, h("button", { class: "btn", type: "button", text: "Close", onclick: closeModal })));
+    openModal(form);
+  }
+  $("#invite").addEventListener("click", inviteModal);
   $("#show-activity").addEventListener("click", activityModal);
   $("#search").addEventListener("input", function (e) { state.q = e.target.value; render(); });
   $("#add-person").addEventListener("click", function () { personModal(); });
