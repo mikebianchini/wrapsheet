@@ -339,6 +339,10 @@ const dbase = getFirestore(app);
     clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, opts.duration || 3500);
   }
   function nameOf(who) { return who === state.uid ? "you" : (who && state.names && state.names[who]) || who || ""; }
+  function truncate(s, n) {
+    s = String(s == null ? "" : s);
+    return s.length > n ? s.slice(0, n).replace(/\s+$/, "") + "…" : s;
+  }
   function timeAgo(ts) {
     if (!ts) return "";
     var m = Math.round((Date.now() - ts) / 60000);
@@ -589,7 +593,7 @@ const dbase = getFirestore(app);
       pill,
       h("div", { class: "g-main" }, h("div", { class: "g-line" }, thumb,
         h("div", {},
-          h("div", { class: "g-title" }, url ? h("a", { href: url, target: "_blank", rel: "noopener noreferrer", text: g.title }) : g.title),
+          h("div", { class: "g-title", title: g.title || "" }, url ? h("a", { href: url, target: "_blank", rel: "noopener noreferrer", text: truncate(g.title, 16) }) : truncate(g.title, 16)),
           g.notes ? h("div", { class: "g-note", text: g.notes }) : null,
           meta.length ? h("div", { class: "g-meta", text: meta.join(" · ") }) : null))),
       h("div", { class: "g-side" },
