@@ -357,6 +357,8 @@ const dbase = getFirestore(app);
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         if (!j || j.status !== "success" || !j.data) return null;
+        var t = j.data.title || "";
+        if (/^(4|5)\d{2}\b/.test(t) || /\b(bad request|forbidden|not found|access denied|unavailable|error)\b/i.test(t)) return null;
         var img = (j.data.image && j.data.image.url) || (j.data.logo && j.data.logo.url) || "";
         var priceRaw = j.data.price;
         var price = priceRaw != null && priceRaw !== "" ? parseFloat(String(priceRaw).replace(/[^0-9.]/g, "")) : null;
