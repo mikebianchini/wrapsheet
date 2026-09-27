@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WrapSheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+:root {
+  --bg: #F4F6F3; --surface: #FFFFFF; --surface-2: #EBEFEA; --ink: #15221D; --muted: #5A6A63; --line: #D6DDD8;
+  --accent: #A62B45; --accent-ink: #FFFFFF; --idea: #40566B; --idea-bg: #E1E8EF; --bought: #1B5647; --bought-bg: #D9EDE4;
+  --wrapped: #7D5806; --wrapped-bg: #F4E7C2; --focus: #1B5647;
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { color-scheme: dark; --bg: #0F1815; --surface: #16231F; --surface-2: #1D2D28; --ink: #E7EEEA; --muted: #9BAAA3; --line: #2B3C36;
+    --accent: #E5708A; --accent-ink: #1A0B10; --idea: #A9BDD1; --idea-bg: #23303C; --bought: #7CCBAE; --bought-bg: #17342B;
+    --wrapped: #E3BC66; --wrapped-bg: #372E14; --focus: #7CCBAE; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink); font: 400 15px/1.5 var(--font-body);
+  padding-inline: 16px; padding-block: max(24px, env(safe-area-inset-top)) max(64px, env(safe-area-inset-bottom));
+}
+.wrap { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+
+.gate { min-height: 70vh; display: flex; align-items: center; justify-content: center; text-align: center; }
+.gate-box { display: flex; flex-direction: column; gap: 16px; align-items: center; max-width: 340px; }
+.gate-box h1 { font: 700 2rem/1.1 var(--font-display); margin: 0; }
+.gate-box p { color: var(--muted); margin: 0; }
+.g-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 11px 20px; font-weight: 600; cursor: pointer; }
+.g-btn:hover { background: var(--surface-2); }
+.g-btn svg { width: 18px; height: 18px; }
+
+.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 32px; }
+.top h1 { font: 700 clamp(2rem, 6vw, 3.2rem)/1 var(--font-display); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+.top .sub { color: var(--muted); margin-top: 8px; }
+.whoami { display: flex; align-items: center; gap: 10px; }
+.whoami img { width: 30px; height: 30px; border-radius: 50%; }
+.countdown { display: flex; align-items: baseline; gap: 10px; }
+.countdown b { font: 700 clamp(2.4rem, 7vw, 3.6rem)/1 var(--font-display); color: var(--accent); font-variant-numeric: tabular-nums; }
+.countdown span { color: var(--muted); max-width: 9ch; line-height: 1.25; }
+
+.stats { display: flex; flex-wrap: wrap; border-block: 1px solid var(--line); }
+.stat { flex: 1 1 140px; padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; border-inline-start: 1px solid var(--line); }
+.stat:first-child { border-inline-start: 0; padding-inline-start: 0; }
+.stat .k { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.stat .v { font: 700 1.6rem/1.15 var(--font-display); font-variant-numeric: tabular-nums; }
+.stat .v small { font: 500 .85rem var(--font-body); color: var(--muted); }
+
+.quick { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.quick input { flex: 1 1 220px; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 9px 12px; }
+.quick select { flex: 0 1 150px; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 9px 10px; }
+
+.bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 6px 14px; cursor: pointer; font-weight: 500; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.search { flex: 1 1 180px; min-width: 0; max-width: 320px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 12px; }
+.spacer { flex: 1 1 0; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 14px; cursor: pointer; font-weight: 600; }
+.btn:hover { background: var(--surface-2); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.08); background: var(--accent); }
+.btn.danger { color: var(--accent); }
+.btn.link { border: 0; background: transparent; padding: 4px 8px; color: var(--muted); font-weight: 500; }
+.btn.link:hover { color: var(--ink); background: transparent; text-decoration: underline; }
+
+.notice { border: 1px solid var(--line); background: var(--surface-2); border-radius: 8px; padding: 10px 14px; color: var(--muted); }
+.notice.share { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.notice.share code { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; overflow-wrap: anywhere; }
+
+/* home / my lists */
+.crumb { border: 0; background: transparent; padding: 4px 0; color: var(--muted); font-weight: 600; cursor: pointer; }
+.crumb:hover { color: var(--ink); text-decoration: underline; }
+.home-top h1 { font: 700 clamp(1.8rem, 5vw, 2.6rem)/1.1 var(--font-display); margin: 0 0 6px; }
+.home-top p { color: var(--muted); margin: 0; }
+.join-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.join-row input { flex: 1 1 220px; min-width: 0; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 9px 12px; }
+.lists { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 14px; }
+.list-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; text-align: left; cursor: pointer; }
+.list-card:hover { border-color: var(--accent); }
+.list-card h3 { font: 700 1.15rem/1.25 var(--font-display); margin: 0; overflow-wrap: anywhere; }
+.list-card .role { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.list-card .leave { align-self: flex-end; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 16px; align-items: start; }
+.person { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+.p-head { padding: 16px 16px 12px; display: flex; flex-direction: column; gap: 10px; }
+.p-title { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.p-title h2 { font: 700 1.35rem/1.2 var(--font-display); margin: 0; overflow-wrap: anywhere; }
+.group { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 600; }
+.budget { display: flex; flex-direction: column; gap: 6px; font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.meter { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--bought); border-radius: 3px; }
+.meter.over i { background: var(--accent); }
+.over-text { color: var(--accent); font-weight: 600; }
+.gifts { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.gift { padding: 12px 16px; display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: start; border-bottom: 1px solid var(--line); }
+.gift:last-child { border-bottom: 0; }
+.pill { border: 0; border-radius: 999px; padding: 5px 10px; font-size: .68rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; cursor: pointer; min-width: 76px; }
+.pill[data-s="idea"] { background: var(--idea-bg); color: var(--idea); }
+.pill[data-s="bought"] { background: var(--bought-bg); color: var(--bought); }
+.pill[data-s="wrapped"] { background: var(--wrapped-bg); color: var(--wrapped); }
+.g-main { min-width: 0; }
+.g-title { font-weight: 600; overflow-wrap: anywhere; }
+.g-title a { color: inherit; text-decoration-color: var(--muted); text-underline-offset: 3px; }
+.g-note { color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; }
+.g-meta { color: var(--muted); font-size: .75rem; margin-top: 2px; }
+.g-side { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.g-price { font-weight: 600; font-variant-numeric: tabular-nums; }
+.empty { padding: 14px 16px; color: var(--muted); border-top: 1px solid var(--line); font-size: .9rem; }
+.p-foot { padding: 10px 12px; border-top: 1px solid var(--line); background: var(--surface-2); display: flex; justify-content: space-between; }
+.p-foot .btn { background: transparent; }
+
+.blank { text-align: center; color: var(--muted); padding: 40px 16px; border: 1px dashed var(--line); border-radius: 12px; }
+
+.overlay { position: fixed; inset: 0; background: rgba(8, 14, 12, .55); display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; z-index: 10; }
+.modal { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; width: 100%; max-width: 460px; padding: 20px; display: flex; flex-direction: column; gap: 14px; margin-block: auto; }
+.modal h3 { font: 700 1.3rem/1.2 var(--font-display); margin: 0; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: .78rem; font-weight: 600; color: var(--muted); }
+.field input, .field select, .field textarea { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 9px 11px; width: 100%; min-width: 0; }
+.field textarea { resize: vertical; min-height: 64px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; z-index: 20; max-width: calc(100% - 32px); }
+@media (max-width: 480px) { .row2 { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: no-preference) { .meter i { transition: width .3s ease; } }
+
+.ptr { position: fixed; top: 10px; left: 50%; width: 38px; height: 38px; margin-left: -19px;
+  border-radius: 50%; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 2px 10px rgba(0,0,0,.14);
+  display: flex; align-items: center; justify-content: center; z-index: 50; opacity: 0; pointer-events: none;
+  transform: translateY(-60px); }
+.ptr svg { width: 18px; height: 18px; stroke: var(--accent); }
+.ptr.busy svg { animation: ptr-spin .8s linear infinite; }
+@keyframes ptr-spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="ptr" id="ptr" aria-hidden="true">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+</div>
+
+<div id="gate" class="gate">
+  <div class="gate-box">
+    <h1>WrapSheet</h1>
+    <p>Sign in with Google to create a gift list or open one you've been invited to.</p>
+    <button class="g-btn" id="google-in" type="button">
+      <svg viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.56 2.7-3.87 2.7-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.9v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.67 9c0-.59.1-1.17.28-1.7V4.97H.9A9 9 0 0 0 0 9c0 1.45.35 2.83.9 4.03z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .9 4.97l3.05 2.33C4.66 5.17 6.65 3.58 9 3.58z"/></svg>
+      Sign in with Google
+    </button>
+  </div>
+</div>
+
+<div id="home-root" class="wrap" hidden>
+  <header class="top">
+    <div class="home-top">
+      <h1>Your lists</h1>
+      <p>Every gift list you've created or been invited to.</p>
+    </div>
+    <div class="whoami" id="home-whoami"></div>
+  </header>
+  <div class="bar">
+    <button class="btn primary" id="create-list" type="button">Create new list</button>
+    <span class="spacer"></span>
+  </div>
+  <form class="join-row" id="join-form">
+    <input id="join-input" type="text" placeholder="Paste an invite link to join someone else's list" aria-label="Paste an invite link">
+    <button class="btn" type="submit">Join list</button>
+  </form>
+  <main id="home-lists"><div class="blank">Loading your lists...</div></main>
+</div>
+
+<div id="app-root" class="wrap" hidden>
+  <header class="top">
+    <div>
+      <button class="crumb" id="back-home" type="button">&larr; Your lists</button>
+      <h1 id="title">Gift list</h1>
+      <div class="sub">Shared gift ideas and purchases. Changes show up for everyone as they happen.</div>
+    </div>
+    <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+      <div class="countdown" aria-live="polite"><b id="days">-</b><span id="days-label">days until Dec 25</span></div>
+      <div class="whoami" id="whoami"></div>
+    </div>
+  </header>
+
+  <div id="banner"></div>
+
+  <form class="quick" id="quick" hidden>
+    <input id="q-link" type="text" placeholder="Paste a product link or type an idea" aria-label="Paste a product link or type an idea" autocomplete="off">
+    <select id="q-person" aria-label="Who is it for"></select>
+    <button class="btn primary" type="submit">Add idea</button>
+  </form>
+
+  <section class="stats" id="stats" aria-label="Summary"></section>
+
+  <div class="bar">
+    <div class="chips" id="chips" role="group" aria-label="Filter by status"></div>
+    <input class="search" id="search" type="search" placeholder="Search gifts or people" aria-label="Search gifts or people">
+    <span class="spacer"></span>
+    <button class="btn" id="add-person" type="button">Add person</button>
+    <button class="btn primary" id="add-gift" type="button">Add gift</button>
+  </div>
+
+  <main id="app"><div class="blank">Loading your list...</div></main>
+</div>
+
+<div id="overlay" class="overlay" hidden></div>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {
+  getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
+  getRedirectResult, onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {
+  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, setDoc, getDoc, onSnapshot, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+// --- Fill this in with the config from Firebase console > Project settings > Your apps ---
+const firebaseConfig = {
+  apiKey: "AIzaSyABbYoWx3fXC_TTZgTQ8ft6oPTLJbKOfzE",
+  authDomain: "ourwrapsheet.firebaseapp.com",
+  projectId: "ourwrapsheet",
+  storageBucket: "ourwrapsheet.firebasestorage.app",
+  messagingSenderId: "303534069062",
+  appId: "1:303534069062:web:57490b46b75099df830147"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const dbase = getFirestore(app);
+
+(function () {
+  "use strict";
+  var STATUS = ["idea", "bought", "wrapped"];
+  var LABEL = { idea: "Idea", bought: "Bought", wrapped: "Wrapped" };
+  var GROUPS = ["Family", "Friends", "Neighbors", "Other"];
+  var state = { people: [], gifts: [], gotP: false, gotG: false, filter: "all", q: "", uid: null, name: "you", error: "", boardName: "" };
+  var toastTimer = null;
+  var boardId = null, unsubP = null, unsubG = null;
+
+  var $ = function (s) { return document.querySelector(s); };
+  function h(tag, attrs) {
+    var e = document.createElement(tag);
+    if (attrs) for (var k in attrs) {
+      if (k === "text") e.textContent = attrs[k];
+      else if (k.slice(0, 2) === "on") e.addEventListener(k.slice(2), attrs[k]);
+      else if (attrs[k] !== false && attrs[k] != null) e.setAttribute(k, attrs[k] === true ? "" : attrs[k]);
+    }
+    for (var i = 2; i < arguments.length; i++) {
+      var c = arguments[i];
+      if (c == null || c === false) continue;
+      e.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+    }
+    return e;
+  }
+  var fmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+  var fmt2 = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function money(n) { return n % 1 === 0 ? fmt.format(n) : fmt2.format(n); }
+  function num(v) { var n = parseFloat(v); return isFinite(n) && n >= 0 ? n : null; }
+  function safeUrl(u) {
+    if (!u) return "";
+    u = String(u).trim();
+    if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+    try { var p = new URL(u); return /^https?:$/.test(p.protocol) ? p.href : ""; } catch (e) { return ""; }
+  }
+  function toast(msg) {
+    var t = $("#toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 3500);
+  }
+  function nameOf(who) { return who === state.uid ? "you" : (who && state.names && state.names[who]) || who || ""; }
+
+  /* countdown */
+  (function () {
+    var now = new Date(), y = now.getFullYear();
+    var xmas = new Date(y, 11, 25);
+    if (now > new Date(y, 11, 26)) { y += 1; xmas = new Date(y, 11, 25); }
+    var days = Math.ceil((xmas - now) / 864e5);
+    $("#days").textContent = days <= 0 ? "Today" : String(days);
+    $("#days-label").textContent = days <= 0 ? "Merry Christmas" : (days === 1 ? "day until Dec 25" : "days until Dec 25");
+  })();
+
+  function personGifts(pid) { return state.gifts.filter(function (g) { return g.personId === pid; }); }
+  function sortedPeople() {
+    return state.people.slice().sort(function (a, b) {
+      var ga = GROUPS.indexOf(a.group), gb = GROUPS.indexOf(b.group);
+      if (ga < 0) ga = 99; if (gb < 0) gb = 99;
+      return ga - gb || String(a.name).localeCompare(String(b.name));
+    });
+  }
+  function spentFor(pid) {
+    return personGifts(pid).reduce(function (s, g) { return s + (g.status !== "idea" && g.price ? g.price : 0); }, 0);
+  }
+
+  function peopleCol() { return collection(dbase, "boards", boardId, "people"); }
+  function giftsCol() { return collection(dbase, "boards", boardId, "gifts"); }
+  function personDoc(id) { return doc(dbase, "boards", boardId, "people", id); }
+  function giftDoc(id) { return doc(dbase, "boards", boardId, "gifts", id); }
+
+  function guard(promise, okMsg) {
+    return promise.then(function () { if (okMsg) toast(okMsg); return true; }, function (e) {
+      console.error(e);
+      toast("That didn't save (" + (e && e.code || "error") + "). Try again.");
+      return false;
+    });
+  }
+  function cycleStatus(g) {
+    var next = STATUS[(STATUS.indexOf(g.status) + 1) % STATUS.length];
+    var patch = { status: next };
+    patch.boughtBy = next === "bought" ? state.name : null;
+    guard(updateDoc(giftDoc(g.id), patch));
+  }
+
+  function closeModal() { $("#overlay").hidden = true; $("#overlay").textContent = ""; }
+  function openModal(node, focusId) {
+    var o = $("#overlay"); o.textContent = ""; o.appendChild(node); o.hidden = false;
+    var f = focusId && document.getElementById(focusId); if (f) f.focus();
+  }
+  function field(id, label, control) { return h("div", { class: "field" }, h("label", { for: id, text: label }), control); }
+
+  function giftModal(gift, presetPerson) {
+    var editing = !!gift; gift = gift || {};
+    var people = sortedPeople();
+    if (!people.length) { toast("Add a person first."); return; }
+    var sel = h("select", { id: "g-person" });
+    people.forEach(function (p) { var o = h("option", { value: p.id, text: p.name }); if (p.id === (gift.personId || presetPerson)) o.selected = true; sel.appendChild(o); });
+    var st = h("select", { id: "g-status" });
+    STATUS.forEach(function (s) { var o = h("option", { value: s, text: LABEL[s] }); if (s === (gift.status || "idea")) o.selected = true; st.appendChild(o); });
+    var title = h("input", { id: "g-title", type: "text", maxlength: "120", placeholder: "Lego Technic set", value: gift.title || "" });
+    var price = h("input", { id: "g-price", type: "number", min: "0", step: "0.01", inputmode: "decimal", placeholder: "0", value: gift.price != null ? gift.price : "" });
+    var url = h("input", { id: "g-url", type: "text", maxlength: "500", placeholder: "amazon.com/...", value: gift.url || "" });
+    var notes = h("textarea", { id: "g-notes", maxlength: "500", placeholder: "Size, color, where you saw it" }, gift.notes || "");
+    var confirmDel = false;
+    var del = editing ? h("button", { class: "btn danger", type: "button", text: "Delete", onclick: function (e) {
+      if (!confirmDel) { confirmDel = true; e.target.textContent = "Tap again to delete"; return; }
+      guard(deleteDoc(giftDoc(gift.id)), "Gift deleted"); closeModal();
+    } }) : null;
+    var form = h("form", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": editing ? "Edit gift" : "Add gift", onsubmit: function (e) {
+      e.preventDefault();
+      var t = title.value.trim(); if (!t) { title.focus(); return; }
+      var data = { personId: sel.value, title: t, price: num(price.value), url: safeUrl(url.value), notes: notes.value.trim(), status: st.value };
+      var p;
+      if (editing) {
+        if (data.status === "bought" && gift.status === "idea") data.boughtBy = state.name;
+        if (data.status === "idea") data.boughtBy = null;
+        p = updateDoc(giftDoc(gift.id), data);
+      } else {
+        data.addedBy = state.name; data.boughtBy = data.status === "idea" ? null : state.name; data.createdAt = Date.now();
+        p = addDoc(giftsCol(), data);
+      }
+      guard(p, editing ? "Gift updated" : "Gift added"); closeModal();
+    } },
+      h("h3", { text: editing ? "Edit gift" : "Add gift" }),
+      field("g-person", "For", sel),
+      field("g-title", "Gift", title),
+      h("div", { class: "row2" }, field("g-price", "Price (USD)", price), field("g-status", "Status", st)),
+      field("g-url", "Link", url),
+      field("g-notes", "Notes", notes),
+      h("div", { class: "actions" },
+        h("button", { class: "btn primary", type: "submit", text: editing ? "Save" : "Add gift" }),
+        h("button", { class: "btn", type: "button", text: "Cancel", onclick: closeModal }),
+        h("span", { class: "spacer" }), del));
+    openModal(form, "g-title");
+  }
+
+  function personModal(person) {
+    var editing = !!person; person = person || {};
+    var name = h("input", { id: "p-name", type: "text", maxlength: "60", placeholder: "Name", value: person.name || "" });
+    var grp = h("select", { id: "p-group" });
+    GROUPS.forEach(function (g) { var o = h("option", { value: g, text: g }); if (g === (person.group || "Family")) o.selected = true; grp.appendChild(o); });
+    var budget = h("input", { id: "p-budget", type: "number", min: "0", step: "1", inputmode: "decimal", placeholder: "Optional", value: person.budget != null ? person.budget : "" });
+    var confirmDel = false;
+    var del = editing ? h("button", { class: "btn danger", type: "button", text: "Delete person", onclick: function (e) {
+      if (!confirmDel) { confirmDel = true; var n = personGifts(person.id).length; e.target.textContent = n ? "Tap again to delete with " + n + " gift" + (n > 1 ? "s" : "") : "Tap again to delete"; return; }
+      var ops = personGifts(person.id).map(function (g) { return deleteDoc(giftDoc(g.id)); });
+      ops.push(deleteDoc(personDoc(person.id)));
+      guard(Promise.all(ops), "Removed"); closeModal();
+    } }) : null;
+    var form = h("form", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": editing ? "Edit person" : "Add person", onsubmit: function (e) {
+      e.preventDefault();
+      var n = name.value.trim(); if (!n) { name.focus(); return; }
+      var data = { name: n, group: grp.value, budget: num(budget.value) };
+      var p;
+      if (editing) p = updateDoc(personDoc(person.id), data);
+      else { data.createdAt = Date.now(); p = addDoc(peopleCol(), data); }
+      guard(p, editing ? "Saved" : n + " added"); closeModal();
+    } },
+      h("h3", { text: editing ? "Edit person" : "Add person" }),
+      field("p-name", "Name", name),
+      h("div", { class: "row2" }, field("p-group", "Group", grp), field("p-budget", "Budget (USD)", budget)),
+      h("div", { class: "actions" },
+        h("button", { class: "btn primary", type: "submit", text: editing ? "Save" : "Add person" }),
+        h("button", { class: "btn", type: "button", text: "Cancel", onclick: closeModal }),
+        h("span", { class: "spacer" }), del));
+    openModal(form, "p-name");
+  }
+
+  function renderStats() {
+    var g = state.gifts, ideas = 0, bought = 0, wrapped = 0, spent = 0;
+    g.forEach(function (x) {
+      if (x.status === "bought") bought++; else if (x.status === "wrapped") wrapped++; else ideas++;
+      if (x.status !== "idea" && x.price) spent += x.price;
+    });
+    var budget = state.people.reduce(function (s, p) { return s + (p.budget || 0); }, 0);
+    function stat(k, v, small) { return h("div", { class: "stat" }, h("span", { class: "k", text: k }), h("span", { class: "v" }, String(v), small ? h("small", { text: small }) : null)); }
+    var box = $("#stats"); box.textContent = "";
+    box.appendChild(stat("Ideas", ideas));
+    box.appendChild(stat("Bought", bought));
+    box.appendChild(stat("Wrapped", wrapped));
+    box.appendChild(stat("Spent", money(spent), budget ? " of " + money(budget) : ""));
+  }
+
+  function renderChips() {
+    var box = $("#chips"); box.textContent = "";
+    [["all", "All"], ["idea", "Ideas"], ["bought", "Bought"], ["wrapped", "Wrapped"]].forEach(function (c) {
+      box.appendChild(h("button", { class: "chip", type: "button", "aria-pressed": String(state.filter === c[0]), text: c[1], onclick: function () { state.filter = c[0]; render(); } }));
+    });
+  }
+
+  function giftRow(g) {
+    var meta = [];
+    if (g.addedBy) meta.push("Added by " + g.addedBy);
+    if (g.status !== "idea" && g.boughtBy) meta.push("Bought by " + g.boughtBy);
+    var url = safeUrl(g.url);
+    var pill = h("button", { class: "pill", type: "button", "data-s": g.status || "idea", text: LABEL[g.status] || "Idea", title: "Tap to change status", onclick: function () { cycleStatus(g); } });
+    return h("li", { class: "gift" },
+      pill,
+      h("div", { class: "g-main" },
+        h("div", { class: "g-title" }, url ? h("a", { href: url, target: "_blank", rel: "noopener noreferrer", text: g.title }) : g.title),
+        g.notes ? h("div", { class: "g-note", text: g.notes }) : null,
+        meta.length ? h("div", { class: "g-meta", text: meta.join(" · ") }) : null),
+      h("div", { class: "g-side" },
+        g.price != null ? h("span", { class: "g-price", text: money(g.price) }) : null,
+        h("button", { class: "btn link", type: "button", text: "Edit", onclick: function () { giftModal(g); } })));
+  }
+
+  function unsortedCard(gifts) {
+    var head = h("div", { class: "p-head" },
+      h("div", { class: "p-title" }, h("h2", { text: "Unsorted ideas" }), h("span", { class: "group", text: "From the share sheet" })));
+    var card = h("article", { class: "person" }, head);
+    var ul = h("ul", { class: "gifts" });
+    gifts.forEach(function (g) { ul.appendChild(giftRow(g)); });
+    card.appendChild(ul);
+    card.appendChild(h("div", { class: "p-foot" },
+      h("span", { class: "btn link", text: "Tap Edit on an idea to assign it to someone" }),
+      h("span")));
+    return card;
+  }
+
+  function personCard(p, gifts) {
+    var spent = spentFor(p.id), planned = personGifts(p.id).reduce(function (s, g) { return s + (g.status === "idea" && g.price ? g.price : 0); }, 0);
+    var head = h("div", { class: "p-head" },
+      h("div", { class: "p-title" }, h("h2", { text: p.name }), h("span", { class: "group", text: p.group || "" })));
+    if (p.budget) {
+      var pct = Math.min(100, Math.round(spent / p.budget * 100)), over = spent > p.budget;
+      head.appendChild(h("div", { class: "budget" },
+        h("div", {}, money(spent) + " of " + money(p.budget) + " spent", over ? h("span", { class: "over-text", text: " · " + money(spent - p.budget) + " over" }) : null, planned ? " · " + money(planned) + " in ideas" : ""),
+        h("div", { class: "meter" + (over ? " over" : ""), role: "img", "aria-label": pct + " percent of budget spent" }, h("i", { style: "width:" + pct + "%" }))));
+    } else if (spent || planned) {
+      head.appendChild(h("div", { class: "budget" }, money(spent) + " spent" + (planned ? " · " + money(planned) + " in ideas" : "")));
+    }
+    var card = h("article", { class: "person" }, head);
+    if (gifts.length) {
+      var ul = h("ul", { class: "gifts" });
+      gifts.forEach(function (g) { ul.appendChild(giftRow(g)); });
+      card.appendChild(ul);
+    } else card.appendChild(h("div", { class: "empty", text: personGifts(p.id).length ? "No gifts match this filter." : "No ideas yet." }));
+    card.appendChild(h("div", { class: "p-foot" },
+      h("button", { class: "btn", type: "button", text: "Add gift", onclick: function () { giftModal(null, p.id); } }),
+      h("button", { class: "btn link", type: "button", text: "Edit person", onclick: function () { personModal(p); } })));
+    return card;
+  }
+
+  function shareUrl() { return location.origin + "/b/" + boardId; }
+
+  function render() {
+    $("#title").textContent = state.boardName || "Gift list";
+    var banner = $("#banner"); banner.textContent = "";
+    if (state.error) banner.appendChild(h("div", { class: "notice", text: state.error }));
+    else banner.appendChild(h("div", { class: "notice share" },
+      h("span", {}, "Invite anyone: share this link — ", h("code", { text: shareUrl() })),
+      h("button", { class: "btn", type: "button", text: "Copy invite link", onclick: function () {
+        navigator.clipboard.writeText(shareUrl()).then(function () { toast("Link copied"); }, function () { toast("Couldn't copy — select and copy the link above."); });
+      } })));
+    $("#quick").hidden = !!state.error;
+    fillQuickPeople();
+    renderStats(); renderChips();
+    var app = $("#app"); app.textContent = "";
+    if (state.error) return;
+    if (!state.gotP || !state.gotG) { app.appendChild(h("div", { class: "blank", text: "Loading your list..." })); return; }
+    var hasUnsorted = state.gifts.some(function (g) { return !g.personId; });
+    if (!state.people.length && !hasUnsorted) {
+      app.appendChild(h("div", { class: "blank", text: "No one on the list yet. Use Add person to start." }));
+      return;
+    }
+    var q = state.q.trim().toLowerCase(), filtering = state.filter !== "all" || !!q;
+    var grid = h("div", { class: "grid" }), shown = 0;
+    var unsorted = state.gifts.filter(function (g) { return !g.personId; }).filter(function (g) {
+      if (state.filter !== "all" && (g.status || "idea") !== state.filter) return false;
+      if (!q) return true;
+      return (String(g.title) + " " + String(g.notes || "")).toLowerCase().indexOf(q) >= 0;
+    }).sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
+    if (unsorted.length) { shown++; grid.appendChild(unsortedCard(unsorted)); }
+    sortedPeople().forEach(function (p) {
+      var pMatch = q && String(p.name).toLowerCase().indexOf(q) >= 0;
+      var gifts = personGifts(p.id).filter(function (g) {
+        if (state.filter !== "all" && (g.status || "idea") !== state.filter) return false;
+        if (!q || pMatch) return true;
+        return (String(g.title) + " " + String(g.notes || "")).toLowerCase().indexOf(q) >= 0;
+      }).sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
+      if (filtering && !gifts.length && !pMatch) return;
+      if (filtering && !gifts.length && state.filter !== "all") return;
+      shown++; grid.appendChild(personCard(p, gifts));
+    });
+    app.appendChild(shown ? grid : h("div", { class: "blank", text: "Nothing matches that filter." }));
+  }
+
+  var SKIP = { dp: 1, gp: 1, product: 1, products: 1, ip: 1, p: 1, item: 1, itm: 1, pd: 1, ref: 1, www: 1 };
+  function guessTitle(u) {
+    try {
+      var url = new URL(u), best = "";
+      url.pathname.split("/").forEach(function (seg) {
+        try { seg = decodeURIComponent(seg); } catch (e) {}
+        seg = seg.replace(/\.(html?|php|aspx?)$/i, "");
+        if (seg.length < 4 || SKIP[seg.toLowerCase()] || /^[A-Z0-9]{8,}$/.test(seg) || /^[0-9-]+$/.test(seg)) return;
+        if (seg.length > best.length) best = seg;
+      });
+      var t = best.replace(/[-_+]+/g, " ").replace(/\s+/g, " ").trim();
+      if (t) return t.charAt(0).toUpperCase() + t.slice(1);
+      return url.hostname.replace(/^www\./, "");
+    } catch (e) { return ""; }
+  }
+  function fillQuickPeople() {
+    var sel = $("#q-person"); if (!sel) return;
+    var prev = sel.value;
+    if (!prev) { try { prev = localStorage.getItem("gl-person") || ""; } catch (e) {} }
+    sel.textContent = "";
+    sortedPeople().forEach(function (p) { var o = h("option", { value: p.id, text: p.name }); if (p.id === prev) o.selected = true; sel.appendChild(o); });
+  }
+
+  /* wiring (bound once) */
+  $("#q-person").addEventListener("change", function (e) { try { localStorage.setItem("gl-person", e.target.value); } catch (x) {} });
+  $("#quick").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var raw = $("#q-link").value.trim(), pid = $("#q-person").value;
+    if (!raw) { $("#q-link").focus(); return; }
+    if (!pid) { toast("Add a person first."); return; }
+    var link = /^(https?:\/\/|www\.)\S+$/i.test(raw) ? safeUrl(raw) : "";
+    var data = { personId: pid, title: link ? (guessTitle(link) || "New idea") : raw.slice(0, 120), price: null, url: link, notes: "", status: "idea", addedBy: state.name, boughtBy: null, createdAt: Date.now() };
+    var pName = (state.people.filter(function (p) { return p.id === pid; })[0] || {}).name || "";
+    guard(addDoc(giftsCol(), data)).then(function (ok) {
+      if (!ok) return;
+      $("#q-link").value = "";
+      toast("Added to " + pName + "'s ideas.");
+    });
+  });
+  $("#search").addEventListener("input", function (e) { state.q = e.target.value; render(); });
+  $("#add-person").addEventListener("click", function () { personModal(); });
+  $("#add-gift").addEventListener("click", function () { giftModal(); });
+  $("#overlay").addEventListener("mousedown", function (e) { if (e.target === e.currentTarget) closeModal(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("#overlay").hidden) closeModal(); });
+
+  /* ---- home: "your lists" ---- */
+  var homeState = { boards: [], got: false };
+  var unsubMyBoards = null;
+
+  function joinBoardId(raw) {
+    raw = (raw || "").trim();
+    var m = raw.match(/\/b\/([A-Za-z0-9_-]{8,})/);
+    if (m) return m[1];
+    if (/^[A-Za-z0-9_-]{8,}$/.test(raw)) return raw;
+    return null;
+  }
+
+  function renderHome() {
+    var box = $("#home-lists"); box.textContent = "";
+    if (!homeState.got) { box.appendChild(h("div", { class: "blank", text: "Loading your lists..." })); return; }
+    if (!homeState.boards.length) {
+      box.appendChild(h("div", { class: "blank", text: "No lists yet. Create one, or paste an invite link someone sent you." }));
+      return;
+    }
+    var grid = h("div", { class: "lists" });
+    homeState.boards.slice().sort(function (a, b) { return (b.joinedAt || 0) - (a.joinedAt || 0); }).forEach(function (b) {
+      var card = h("div", { class: "list-card", tabindex: "0", role: "button", "aria-label": "Open " + (b.name || "list"), onclick: function () { navigate("/b/" + b.id); }, onkeydown: function (e) { if (e.key === "Enter") navigate("/b/" + b.id); } },
+        h("h3", { text: b.name || "Untitled list" }),
+        h("span", { class: "role", text: b.ownerUid === state.uid ? "You created this" : "Shared with you" }),
+        h("button", { class: "btn link leave", type: "button", text: "Remove from my lists", onclick: function (e) {
+          e.stopPropagation();
+          deleteDoc(doc(dbase, "users", state.uid, "boards", b.id)).catch(function (err) { console.error(err); toast("Couldn't remove that."); });
+        } }));
+      grid.appendChild(card);
+    });
+    box.appendChild(grid);
+  }
+
+  function createListModal() {
+    var name = h("input", { id: "l-name", type: "text", maxlength: "60", placeholder: "Smith Family Christmas" });
+    var form = h("form", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": "Create new list", onsubmit: function (e) {
+      e.preventDefault();
+      var n = name.value.trim(); if (!n) { name.focus(); return; }
+      var id = randomBoardId();
+      Promise.all([
+        setDoc(doc(dbase, "boards", id), { name: n, ownerUid: state.uid, ownerName: state.name, createdAt: Date.now() }),
+        setDoc(doc(dbase, "users", state.uid, "boards", id), { name: n, ownerUid: state.uid, joinedAt: Date.now() })
+      ]).then(function () { closeModal(); navigate("/b/" + id); }, function (err) { console.error(err); toast("Couldn't create the list. Try again."); });
+    } },
+      h("h3", { text: "Create new list" }),
+      field("l-name", "List name", name),
+      h("div", { class: "actions" },
+        h("button", { class: "btn primary", type: "submit", text: "Create" }),
+        h("button", { class: "btn", type: "button", text: "Cancel", onclick: closeModal })));
+    openModal(form, "l-name");
+  }
+
+  $("#create-list").addEventListener("click", createListModal);
+  $("#join-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var id = joinBoardId($("#join-input").value);
+    if (!id) { toast("That doesn't look like a valid invite link."); return; }
+    getDoc(doc(dbase, "boards", id)).then(function (snap) {
+      if (!snap.exists()) { toast("That list doesn't exist, or the link's wrong."); return; }
+      var data = snap.data();
+      setDoc(doc(dbase, "users", state.uid, "boards", id), { name: data.name || "Untitled list", ownerUid: data.ownerUid || null, joinedAt: Date.now() }).then(function () {
+        $("#join-input").value = "";
+        navigate("/b/" + id);
+      });
+    }, function (err) { console.error(err); toast("Couldn't check that link. Try again."); });
+  });
+  $("#back-home").addEventListener("click", function () { navigate("/"); });
+
+  /* ---- router ---- */
+  function boardIdFromPath() {
+    var m = location.pathname.match(/^\/b\/([A-Za-z0-9_-]{8,})$/);
+    return m ? m[1] : null;
+  }
+  function randomBoardId() {
+    var bytes = crypto.getRandomValues(new Uint8Array(16));
+    return Array.from(bytes, function (b) { return b.toString(16).padStart(2, "0"); }).join("");
+  }
+  function navigate(path) {
+    try { history.pushState(null, "", path); } catch (e) {}
+    route();
+  }
+  window.addEventListener("popstate", route);
+
+  function teardownBoard() {
+    if (unsubP) { unsubP(); unsubP = null; }
+    if (unsubG) { unsubG(); unsubG = null; }
+    if (unsubBoardDoc) { unsubBoardDoc(); unsubBoardDoc = null; }
+    state.people = []; state.gifts = []; state.gotP = false; state.gotG = false; state.error = ""; state.boardName = "";
+  }
+  function teardownHome() {
+    if (unsubMyBoards) { unsubMyBoards(); unsubMyBoards = null; }
+    homeState.boards = []; homeState.got = false;
+  }
+
+  var unsubBoardDoc = null;
+  function showBoard(id) {
+    teardownHome();
+    $("#home-root").hidden = true; $("#app-root").hidden = false;
+    boardId = id;
+    $("#whoami").textContent = "";
+    $("#whoami").appendChild(h("span", { text: state.name }));
+    $("#whoami").appendChild(h("button", { class: "btn link", type: "button", text: "Sign out", onclick: function () { signOut(auth); } }));
+
+    if (unsubP) unsubP(); if (unsubG) unsubG(); if (unsubBoardDoc) unsubBoardDoc();
+    function fail(e) { console.error(e); state.error = "The list stopped updating (" + (e && e.code || "error") + "). Reload the page to reconnect."; render(); }
+    var joined = false;
+    unsubBoardDoc = onSnapshot(doc(dbase, "boards", id), function (snap) {
+      if (!snap.exists()) {
+        state.error = "This list doesn't exist, or the link isn't right.";
+        state.gotP = true; state.gotG = true; render();
+        return;
+      }
+      var data = snap.data();
+      state.boardName = data.name || "Untitled list";
+      if (state.error === "This list doesn't exist, or the link isn't right.") { state.error = ""; }
+      if (!joined) {
+        joined = true;
+        setDoc(doc(dbase, "users", state.uid, "boards", id), { name: state.boardName, ownerUid: data.ownerUid || null, joinedAt: Date.now() }).catch(function (e) { console.error(e); });
+      }
+      render();
+    }, fail);
+    unsubP = onSnapshot(peopleCol(), function (snap) {
+      state.people = snap.docs.map(function (d) { return Object.assign({}, d.data(), { id: d.id }); });
+      state.gotP = true; render();
+    }, fail);
+    unsubG = onSnapshot(giftsCol(), function (snap) {
+      state.gifts = snap.docs.map(function (d) { return Object.assign({}, d.data(), { id: d.id }); });
+      state.gotG = true; render();
+    }, fail);
+
+    render();
+  }
+
+  function showHome() {
+    teardownBoard();
+    $("#app-root").hidden = true; $("#home-root").hidden = false;
+    try { history.replaceState(null, "", "/"); } catch (e) {}
+
+    $("#home-whoami").textContent = "";
+    $("#home-whoami").appendChild(h("span", { text: state.name }));
+    $("#home-whoami").appendChild(h("button", { class: "btn link", type: "button", text: "Sign out", onclick: function () { signOut(auth); } }));
+
+    if (unsubMyBoards) unsubMyBoards();
+    unsubMyBoards = onSnapshot(collection(dbase, "users", state.uid, "boards"), function (snap) {
+      homeState.boards = snap.docs.map(function (d) { return Object.assign({}, d.data(), { id: d.id }); });
+      homeState.got = true; renderHome();
+    }, function (e) { console.error(e); homeState.got = true; renderHome(); });
+
+    renderHome();
+  }
+
+  function route() {
+    var id = boardIdFromPath();
+    if (id) showBoard(id); else showHome();
+  }
+
+  window.__gl = { route: route, setUser: function (user) {
+    state.uid = user.uid;
+    state.name = user.displayName || (user.email ? user.email.split("@")[0] : "you");
+  } };
+})();
+
+/* auth bootstrap */
+document.getElementById("google-in").addEventListener("click", function () {
+  signInWithPopup(auth, new GoogleAuthProvider()).catch(function (e) {
+    if (e && (e.code === "auth/popup-blocked" || e.code === "auth/cancelled-popup-request")) {
+      signInWithRedirect(auth, new GoogleAuthProvider());
+    } else {
+      console.error(e);
+      alert("Sign-in failed: " + (e && e.message || e));
+    }
+  });
+});
+
+getRedirectResult(auth).catch(function (e) { console.error(e); });
+
+onAuthStateChanged(auth, function (user) {
+  var gate = document.getElementById("gate"), home = document.getElementById("home-root"), root = document.getElementById("app-root");
+  if (!user) { gate.hidden = false; home.hidden = true; root.hidden = true; return; }
+  gate.hidden = true;
+  window.__gl.setUser(user);
+  window.__gl.route();
+});
+
+/* pull to refresh (touch devices only) */
+(function () {
+  var ptr = document.getElementById("ptr");
+  var startY = null, pulling = false, busy = false;
+  var THRESHOLD = 64, MAX = 100;
+
+  function atTop() {
+    return (document.scrollingElement || document.documentElement).scrollTop <= 0;
+  }
+
+  document.addEventListener("touchstart", function (e) {
+    if (busy || e.touches.length !== 1 || !atTop()) { startY = null; return; }
+    startY = e.touches[0].clientY;
+    pulling = true;
+  }, { passive: true });
+
+  document.addEventListener("touchmove", function (e) {
+    if (!pulling || startY == null || busy) return;
+    var dy = e.touches[0].clientY - startY;
+    if (dy <= 0 || !atTop()) { pulling = false; ptr.style.opacity = 0; ptr.style.transform = "translateY(-60px)"; return; }
+    var dist = Math.min(dy * 0.5, MAX);
+    ptr.style.opacity = Math.min(dist / THRESHOLD, 1);
+    ptr.style.transform = "translateY(" + (dist - 50) + "px) rotate(" + (dist * 2.4) + "deg)";
+  }, { passive: true });
+
+  document.addEventListener("touchend", function () {
+    if (!pulling || startY == null || busy) { pulling = false; return; }
+    var current = ptr.style.transform.match(/translateY\(([-\d.]+)px\)/);
+    var dist = current ? parseFloat(current[1]) + 50 : 0;
+    pulling = false;
+    if (dist >= THRESHOLD) {
+      busy = true;
+      ptr.classList.add("busy");
+      ptr.style.opacity = 1;
+      ptr.style.transform = "translateY(10px)";
+      setTimeout(function () { location.reload(); }, 350);
+    } else {
+      ptr.style.opacity = 0;
+      ptr.style.transform = "translateY(-60px)";
+    }
+  }, { passive: true });
+})();
+</script>
+</body>
+</html>
