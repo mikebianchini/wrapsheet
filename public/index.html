@@ -139,6 +139,8 @@ img { max-width: 100%; }
 .gift { padding: 15px 18px; display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; align-items: center; border-bottom: 1px solid var(--line); }
 .gift:last-child { border-bottom: 0; }
 .pill { border: 0; border-radius: 999px; padding: 4px 9px; font-size: .6rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
+.pill.status-select { font-family: inherit; padding-right: 8px; }
+.pill.status-select:focus-visible { outline-offset: 1px; }
 .pill[data-s="idea"] { background: var(--idea-bg); color: var(--idea); }
 .pill[data-s="bought"] { background: var(--bought-bg); color: var(--bought); }
 .pill[data-s="wrapped"] { background: var(--wrapped-bg); color: var(--wrapped); }
@@ -420,8 +422,8 @@ const dbase = getFirestore(app);
       return false;
     });
   }
-  function cycleStatus(g) {
-    var next = STATUS[(STATUS.indexOf(g.status) + 1) % STATUS.length];
+  function setStatus(g, next, el) {
+    if (el) el.setAttribute("data-s", next);
     var patch = { status: next };
     patch.boughtBy = next === "bought" ? state.name : null;
     guard(updateDoc(giftDoc(g.id), patch)).then(function (ok) {
@@ -588,9 +590,18 @@ const dbase = getFirestore(app);
       if (g.status !== "idea" && g.boughtBy) meta.push("Bought by " + g.boughtBy);
     }
     var url = safeUrl(g.url);
-    var pill = mine
-      ? h("span", { class: "pill hidden-status", text: "🎁", title: "Hidden to keep it a surprise" })
-      : h("button", { class: "pill", type: "button", "data-s": g.status || "idea", text: LABEL[g.status] || "Idea", title: "Tap to change status", onclick: function () { cycleStatus(g); } });
+    var pill;
+    if (mine) {
+      pill = h("span", { class: "pill hidden-status", text: "🎁", title: "Hidden to keep it a surprise" });
+    } else {
+      pill = h("select", { class: "pill status-select", "data-s": g.status || "idea", "aria-label": "Change status for " + (g.title || "this gift") });
+      STATUS.forEach(function (s) {
+        var o = h("option", { value: s, text: LABEL[s] });
+        if (s === (g.status || "idea")) o.selected = true;
+        pill.appendChild(o);
+      });
+      pill.addEventListener("change", function (e) { setStatus(g, e.target.value, pill); });
+    }
     var thumb = g.imageUrl ? h("img", { class: "g-thumb", src: g.imageUrl, alt: "", loading: "lazy", onerror: function (e) { e.target.style.display = "none"; } }) : null;
     return h("li", { class: "gift" },
       h("div", { class: "g-main" }, h("div", { class: "g-line" }, thumb,
