@@ -161,9 +161,6 @@ img { max-width: 100%; }
 .g-line { display: flex; gap: 12px; align-items: center; }
 .g-thumb { width: 54px; height: 54px; border-radius: 13px; object-fit: cover; background: var(--surface-2); flex: none; box-shadow: var(--shadow-sm); }
 .modal-thumb { width: 72px; height: 72px; border-radius: 16px; object-fit: cover; background: var(--surface-2); box-shadow: var(--shadow-sm); align-self: flex-start; }
-.g-claim { font-size: .75rem; margin-top: 2px; }
-.g-claim button { border: 0; background: transparent; color: var(--idea); font-weight: 600; cursor: pointer; padding: 0; }
-.g-claim.claimed { color: var(--muted); font-weight: 500; }
 .toast-row { display: flex; align-items: center; gap: 12px; }
 .toast-row button { border: 0; background: transparent; color: var(--bg); font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0; white-space: nowrap; }
 .activity-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto; }
@@ -417,23 +414,6 @@ const dbase = getFirestore(app);
       if (ok) logActivity(state.name + " marked “" + g.title + "” as " + LABEL[next]);
     });
   }
-  function claimControl(g) {
-    if (g.claimedByUid) {
-      if (g.claimedByUid === state.uid) {
-        return h("div", { class: "g-claim claimed" }, "You claimed this · ",
-          h("button", { type: "button", text: "Release", onclick: function () {
-            guard(updateDoc(giftDoc(g.id), { claimedByUid: null, claimedByName: null }), "Released");
-          } }));
-      }
-      return h("div", { class: "g-claim claimed", text: "Claimed by " + (g.claimedByName || "someone") });
-    }
-    if (g.status !== "idea") return null;
-    return h("div", { class: "g-claim" }, h("button", { type: "button", text: "I'll get this", onclick: function () {
-      guard(updateDoc(giftDoc(g.id), { claimedByUid: state.uid, claimedByName: state.name }), "Claimed — you've got this one");
-      logActivity(state.name + " claimed “" + g.title + "”");
-    } }));
-  }
-
   function closeModal() { $("#overlay").hidden = true; $("#overlay").textContent = ""; }
   function openModal(node, focusId) {
     var o = $("#overlay"); o.textContent = ""; o.appendChild(node); o.hidden = false;
@@ -604,7 +584,6 @@ const dbase = getFirestore(app);
           meta.length ? h("div", { class: "g-meta", text: meta.join(" · ") }) : null))),
       h("div", { class: "g-side" },
         !mine && g.price != null ? h("span", { class: "g-price", text: money(g.price) }) : null,
-        !mine ? claimControl(g) : null,
         h("button", { class: "btn link", type: "button", text: "Edit", onclick: function () { giftModal(g); } })));
   }
 
