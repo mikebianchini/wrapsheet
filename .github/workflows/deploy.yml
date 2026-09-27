@@ -32,7 +32,7 @@ jobs:
       - name: Deploy
         run: |
           set +e
-          npx firebase-tools deploy --only hosting,firestore --project ourwrapsheet --non-interactive > /tmp/deploy.log 2>&1
+          npx firebase-tools deploy --only hosting --project ourwrapsheet --non-interactive > /tmp/deploy.log 2>&1
           echo "EXIT_CODE=$?" >> /tmp/deploy.log
           cat /tmp/deploy.log
         env:
