@@ -9,7 +9,7 @@
 <link rel="icon" type="image/png" sizes="48x48" href="/icons/icon-48.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png">
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#F2F2F7">
+<meta name="theme-color" content="#0E2745">
 <style>
 /* ---------------------------------------------------------------------
    Apple Human Interface Guidelines tokens.
@@ -18,10 +18,18 @@
    https://developer.apple.com/design/human-interface-guidelines/
 --------------------------------------------------------------------- */
 :root {
-  /* system colors (light) */
-  --blue: #007AFF; --green: #34C759; --orange: #FF9500; --red: #FF3B30; --gray: #8E8E93;
-  --tint: var(--blue);
-  --blue-bg: rgba(0,122,255,.12); --green-bg: rgba(52,199,89,.14); --orange-bg: rgba(255,149,0,.14); --red-bg: rgba(255,59,48,.12);
+  /* system colors (light) — kept for semantic meaning (bought/wrapped/destructive) */
+  --green: #34C759; --orange: #FF9500; --red: #FF3B30; --gray: #8E8E93;
+  --green-bg: rgba(52,199,89,.14); --orange-bg: rgba(255,149,0,.14); --red-bg: rgba(255,59,48,.12);
+
+  /* BRAND — sampled directly from the WrapSheet app icon (navy square,
+     gold ribbon-bow "W"). This is the app's real identity, not a generic
+     iOS blue standing in for it: it drives the primary tint, links,
+     focus rings and the one hero surface per screen. */
+  --brand-navy: #0E2745; --brand-navy-deep: #081527; --brand-gold: #E2B255; --brand-gold-ink: #8A5E13;
+  --tint: var(--brand-navy);
+  --tint-bg: rgba(14,39,69,.08);
+  --on-tint: #FFFFFF;
 
   /* labels */
   --label: rgba(0,0,0,.92); --label-2: rgba(60,60,67,.6); --label-3: rgba(60,60,67,.3);
@@ -30,10 +38,6 @@
   --bg: #F2F2F7; --bg-elevated: #FFFFFF; --bg-elevated-2: #F2F2F7; --bg-navbar: rgba(242,242,247,.82);
   --fill: rgba(120,120,128,.2); --fill-2: rgba(120,120,128,.12);
   --separator: rgba(60,60,67,.29); --opaque-separator: #C6C6C8;
-
-  /* brand: the WrapSheet mark's own navy/gold, used only for the app icon
-     and the one signature countdown badge — never a competing UI palette */
-  --brand-navy: #0F2A4A; --brand-gold: #D9A73B;
 
   --radius-control: 10px; --radius-card: 14px; --radius-sheet: 20px;
   --shadow-card: 0 1px 2px rgba(0,0,0,.06), 0 1px 1px rgba(0,0,0,.04);
@@ -61,13 +65,18 @@
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --blue: #0A84FF; --green: #30D158; --orange: #FF9F0A; --red: #FF453A; --gray: #8E8E93;
-    --blue-bg: rgba(10,132,255,.22); --green-bg: rgba(48,209,88,.2); --orange-bg: rgba(255,159,10,.2); --red-bg: rgba(255,69,58,.2);
+    --green: #30D158; --orange: #FF9F0A; --red: #FF453A; --gray: #8E8E93;
+    --green-bg: rgba(48,209,88,.2); --orange-bg: rgba(255,159,10,.2); --red-bg: rgba(255,69,58,.2);
+    /* navy nearly vanishes on a black surface, so gold — the mark's other
+       half — takes over as the tint; navy still owns the hero surfaces */
+    --brand-gold: #EBC673; --brand-gold-ink: #EBC673;
+    --tint: var(--brand-gold);
+    --tint-bg: rgba(235,198,115,.16);
+    --on-tint: #241804;
     --label: rgba(255,255,255,.92); --label-2: rgba(235,235,245,.6); --label-3: rgba(235,235,245,.3);
     --bg: #000000; --bg-elevated: #1C1C1E; --bg-elevated-2: #2C2C2E; --bg-navbar: rgba(0,0,0,.72);
     --fill: rgba(120,120,128,.36); --fill-2: rgba(120,120,128,.24);
     --separator: rgba(84,84,88,.65); --opaque-separator: #38383A;
-    --brand-gold: #E8BE5D;
     --shadow-card: 0 1px 2px rgba(0,0,0,.5), 0 1px 1px rgba(0,0,0,.4);
     --shadow-sheet: 0 2px 8px rgba(0,0,0,.6), 0 28px 56px -20px rgba(0,0,0,.8);
   }
@@ -82,7 +91,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--tint); outline-offset: 2px; border-radius: 6px; }
 [hidden] { display: none !important; }
 img { max-width: 100%; }
-::selection { background: var(--blue-bg); color: var(--label); }
+::selection { background: var(--tint-bg); color: var(--label); }
 a { color: var(--tint); }
 @media (prefers-reduced-motion: no-preference) {
   .btn, .icon-btn, .list-row, .gift, .chip { transition: opacity .15s var(--ease), background-color .15s var(--ease), box-shadow .15s var(--ease); }
@@ -93,13 +102,21 @@ a { color: var(--tint); }
 .svg-icon { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 /* ---------------- sign-in gate ---------------- */
-.gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+/* the one full-bleed brand moment: navy, with the mark front and center */
+.gate {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px;
+  background:
+    radial-gradient(640px 380px at 50% 28%, rgba(226,178,85,.10), transparent 70%),
+    linear-gradient(165deg, var(--brand-navy) 0%, var(--brand-navy-deep) 100%);
+  color: #fff;
+}
 .gate-box { display: flex; flex-direction: column; gap: 16px; align-items: center; max-width: 320px; }
-.gate-box img { width: 72px; height: 72px; border-radius: 18px; box-shadow: var(--shadow-card); }
-.gate-box h1 { font: var(--tx-large-title); letter-spacing: -.02em; margin: 4px 0 0; color: var(--label); }
-.gate-box p { color: var(--label-2); margin: 0; font: var(--tx-subhead); }
-.g-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--bg-elevated); border: 1px solid var(--opaque-separator); border-radius: var(--radius-control); padding: 12px 20px; font: var(--tx-headline); color: var(--label); cursor: pointer; margin-top: 8px; }
-.g-btn:hover { background: var(--fill-2); }
+.gate-box img { width: 88px; height: 88px; border-radius: 20px; box-shadow: 0 12px 32px -10px rgba(0,0,0,.6), 0 0 0 1px rgba(226,178,85,.35); }
+.gate-box h1 { font: var(--tx-large-title); letter-spacing: -.02em; margin: 6px 0 0; color: #fff; }
+.gate-box p { color: rgba(255,255,255,.7); margin: 0; font: var(--tx-subhead); }
+.gate-rule { width: 40px; height: 2px; background: var(--brand-gold); border-radius: 2px; margin: 0; }
+.g-btn { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 0; border-radius: var(--radius-control); padding: 12px 20px; font: var(--tx-headline); color: #1C1C1E; cursor: pointer; margin-top: 8px; box-shadow: 0 6px 20px -8px rgba(0,0,0,.5); }
+.g-btn:hover { background: #F3F3F3; }
 .g-btn svg { width: 18px; height: 18px; }
 
 /* ---------------- navigation bar (sticky, large-title collapse) ---------------- */
@@ -112,19 +129,37 @@ a { color: var(--tint); }
 .navbar.is-collapsed .navbar-title { opacity: 1; transform: none; }
 .back-btn { display: inline-flex; align-items: center; gap: 2px; border: 0; background: transparent; color: var(--tint); font: var(--tx-body); padding: 6px 4px 6px 0; cursor: pointer; }
 .back-btn svg { width: 22px; height: 22px; }
-.large-title-block { padding: 4px 0 2px; }
-.large-title { font: var(--tx-large-title); letter-spacing: -.02em; margin: 0; color: var(--label); }
-.large-subtitle { font: var(--tx-subhead); color: var(--label-2); margin: 4px 0 0; }
+.brand-lockup { display: inline-flex; align-items: center; gap: 7px; }
+.brand-lockup img { width: 24px; height: 24px; border-radius: 6px; }
+.brand-lockup span { font: 700 15px/1 var(--font); letter-spacing: -.01em; color: var(--label); }
+/* the large-title block doubles as the brand surface: a navy card with a
+   thin gold rule and a faint icon watermark, once per screen */
+.large-title-block {
+  position: relative; overflow: hidden; border-radius: var(--radius-sheet); color: #fff;
+  padding: 22px 20px 20px; margin-top: 6px;
+  background: linear-gradient(165deg, var(--brand-navy) 0%, var(--brand-navy-deep) 130%);
+  box-shadow: var(--shadow-card);
+}
+.large-title-block::after {
+  content: ""; position: absolute; top: -18px; right: -18px; width: 140px; height: 140px;
+  background: url("/icons/icon-192.png") center / contain no-repeat; opacity: .07; filter: saturate(0) brightness(2);
+  pointer-events: none;
+}
+.large-title-block .rule { width: 32px; height: 3px; background: var(--brand-gold); border-radius: 2px; margin: 0 0 10px; }
+.large-title { font: var(--tx-large-title); letter-spacing: -.02em; margin: 0; color: #fff; }
+.large-subtitle { font: var(--tx-subhead); color: rgba(255,255,255,.68); margin: 4px 0 0; max-width: 42ch; }
+.large-title-block .btn.plain { color: rgba(255,255,255,.85); }
 .whoami { display: flex; align-items: center; gap: 8px; }
 .whoami img { width: 26px; height: 26px; border-radius: 50%; }
 .whoami-name { font: var(--tx-footnote); color: var(--label-2); max-width: 11ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.days-badge { display: inline-flex; align-items: baseline; gap: 3px; background: var(--red-bg); color: var(--red); border-radius: 999px; padding: 4px 10px; font: var(--tx-caption2); letter-spacing: 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.days-badge { display: inline-flex; align-items: baseline; gap: 3px; background: var(--brand-navy); color: var(--brand-gold); border-radius: 999px; padding: 4px 10px; font: var(--tx-caption2); letter-spacing: 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .days-badge b { font: 700 13px/1 var(--font); }
+@media (prefers-color-scheme: dark) { .days-badge { background: var(--brand-gold); color: var(--brand-navy-deep); } }
 
 /* ---------------- buttons ---------------- */
 .btn { border: 0; background: var(--fill); border-radius: var(--radius-control); padding: 8px 14px; cursor: pointer; font: var(--tx-subhead); font-weight: 600; color: var(--tint); }
 .btn:hover { background: var(--fill-2); }
-.btn.filled { background: var(--tint); color: #fff; }
+.btn.filled { background: var(--tint); color: var(--on-tint); }
 .btn.filled:hover { filter: brightness(1.06); }
 .btn.plain { background: transparent; padding: 8px 6px; }
 .btn.plain:hover { background: transparent; text-decoration: underline; }
@@ -167,8 +202,9 @@ a { color: var(--tint); }
 .section-header { font: var(--tx-caption2); text-transform: uppercase; letter-spacing: .05em; color: var(--label-2); padding: 0 4px 6px; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .person { background: var(--bg-elevated); border-radius: var(--radius-card); overflow: hidden; box-shadow: var(--shadow-card); }
 .p-head { padding: 12px 14px 10px; display: flex; flex-direction: column; gap: 4px; }
-.p-title { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.p-title { display: flex; align-items: center; justify-content: flex-start; gap: 10px; }
 .p-title h2 { font: var(--tx-title3); margin: 0; overflow-wrap: anywhere; color: var(--label); }
+.p-avatar { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-navy); color: var(--brand-gold); font: 700 13px/1 var(--font); }
 .prefs { color: var(--label-2); font: var(--tx-footnote); overflow-wrap: anywhere; }
 .budget { display: flex; flex-direction: column; gap: 5px; font: var(--tx-footnote); color: var(--label-2); font-variant-numeric: tabular-nums; margin-top: 2px; }
 .meter { height: 4px; border-radius: 2px; background: var(--fill); overflow: hidden; }
@@ -191,9 +227,9 @@ a { color: var(--tint); }
 
 /* status: plain colored value text + a small select for changing it */
 .status-select { appearance: none; -webkit-appearance: none; border: 0; background: transparent; cursor: pointer; font: var(--tx-footnote); font-weight: 600; text-align: right; padding-right: 2px; }
-.status-select[data-s="idea"] { color: var(--blue); }
+.status-select[data-s="idea"] { color: var(--tint); }
 .status-select[data-s="bought"] { color: var(--green); }
-.status-select[data-s="wrapped"] { color: var(--orange); }
+.status-select[data-s="wrapped"] { color: var(--brand-gold-ink); } /* wrapped = the mark's gold ribbon */
 
 .empty { padding: 14px; color: var(--label-2); border-top: 1px solid var(--separator); font: var(--tx-subhead); }
 .p-foot { padding: 8px 10px; border-top: 1px solid var(--separator); display: flex; justify-content: space-between; }
@@ -235,6 +271,9 @@ a { color: var(--tint); }
 .activity-list .when { color: var(--label-2); font: var(--tx-caption1); margin-top: 2px; }
 
 .blank { text-align: center; color: var(--label-2); padding: 40px 16px; font: var(--tx-subhead); }
+.blank img { width: 40px; height: 40px; border-radius: 10px; opacity: .35; margin-bottom: 10px; display: block; margin-inline: auto; }
+
+.brand-foot { text-align: center; color: var(--label-3); font: var(--tx-caption2); padding: 18px 16px 4px; text-transform: none; letter-spacing: 0; }
 
 /* HUD-style toast — a true overlay, so it earns vibrancy */
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px));
@@ -262,8 +301,9 @@ a { color: var(--tint); }
 
 <div id="gate" class="gate">
   <div class="gate-box">
-    <img src="/icons/icon-192.png" alt="" width="72" height="72">
+    <img src="/icons/icon-192.png" alt="" width="88" height="88">
     <h1>WrapSheet</h1>
+    <div class="gate-rule" aria-hidden="true"></div>
     <p>Sign in with Google to create a gift list or open one you've been invited to.</p>
     <button class="g-btn" id="google-in" type="button">
       <svg viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.56 2.7-3.87 2.7-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.9v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.67 9c0-.59.1-1.17.28-1.7V4.97H.9A9 9 0 0 0 0 9c0 1.45.35 2.83.9 4.03z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .9 4.97l3.05 2.33C4.66 5.17 6.65 3.58 9 3.58z"/></svg>
@@ -275,12 +315,14 @@ a { color: var(--tint); }
 <div id="home-root" hidden>
   <header class="navbar" id="home-navbar">
     <div class="navbar-inner">
+      <div class="navbar-leading brand-lockup"><img src="/icons/icon-48.png" alt=""><span>WrapSheet</span></div>
       <span class="navbar-title">Your Lists</span>
       <div class="navbar-trailing whoami" id="home-whoami"></div>
     </div>
   </header>
   <main class="wrap">
     <div class="large-title-block" id="home-large-title">
+      <div class="rule" aria-hidden="true"></div>
       <h1 class="large-title">Your Lists</h1>
       <p class="large-subtitle">Every gift list you've created or been invited to.</p>
     </div>
@@ -292,6 +334,7 @@ a { color: var(--tint); }
       <button class="btn" type="submit">Join</button>
     </form>
     <main id="home-lists"><div class="blank">Loading your lists…</div></main>
+    <footer class="brand-foot">WrapSheet — shared gift planning for the people who matter</footer>
   </main>
 </div>
 
@@ -313,6 +356,7 @@ a { color: var(--tint); }
 
   <main class="wrap">
     <div class="large-title-block" id="app-large-title">
+      <div class="rule" aria-hidden="true"></div>
       <h1 class="large-title" id="title">Gift list</h1>
       <p class="large-subtitle">Shared gift ideas and purchases. Changes show up for everyone as they happen.</p>
     </div>
@@ -345,6 +389,7 @@ a { color: var(--tint); }
     </div>
 
     <main id="app"><div class="blank">Loading your list…</div></main>
+    <footer class="brand-foot">WrapSheet — shared gift planning for the people who matter</footer>
   </main>
 </div>
 
@@ -730,8 +775,9 @@ const dbase = getFirestore(app);
   function personCard(p, gifts) {
     var mine = !!(p.ownerUid && p.ownerUid === state.uid);
     var spent = spentFor(p.id), planned = personGifts(p.id).reduce(function (s, g) { return s + (g.status === "idea" && g.price ? g.price : 0); }, 0);
+    var initial = (String(p.name || "?").trim().charAt(0) || "?").toUpperCase();
     var head = h("div", { class: "p-head" },
-      h("div", { class: "p-title" }, h("h2", { text: p.name })));
+      h("div", { class: "p-title" }, h("span", { class: "p-avatar", "aria-hidden": "true", text: initial }), h("h2", { text: p.name })));
     if (p.notes) head.appendChild(h("div", { class: "prefs", text: p.notes }));
     if (p.budget) {
       var pct = Math.min(100, Math.round(spent / p.budget * 100)), over = spent > p.budget;
@@ -783,7 +829,7 @@ const dbase = getFirestore(app);
     if (!state.gotP || !state.gotG) { app.appendChild(h("div", { class: "blank", text: "Loading your list..." })); return; }
     var hasUnsorted = state.gifts.some(function (g) { return !g.personId; });
     if (!state.people.length && !hasUnsorted) {
-      app.appendChild(h("div", { class: "blank", text: "No one on the list yet. Tap Add Person to start, or forward a product link from Safari with the WrapSheet Shortcut." }));
+      app.appendChild(h("div", { class: "blank" }, h("img", { src: "/icons/icon-48.png", alt: "" }), "No one on the list yet. Tap Add Person to start, or forward a product link from Safari with the WrapSheet Shortcut."));
       return;
     }
     var q = state.q.trim().toLowerCase(), filtering = state.filter !== "all" || state.personFilter !== "all" || !!q;
@@ -921,7 +967,7 @@ const dbase = getFirestore(app);
     var box = $("#home-lists"); box.textContent = "";
     if (!homeState.got) { box.appendChild(h("div", { class: "blank", text: "Loading your lists..." })); return; }
     if (!homeState.boards.length) {
-      box.appendChild(h("div", { class: "blank", text: "No lists yet. Create one, or paste an invite link someone sent you." }));
+      box.appendChild(h("div", { class: "blank" }, h("img", { src: "/icons/icon-48.png", alt: "" }), "No lists yet. Create one, or paste an invite link someone sent you."));
       return;
     }
     var wrapDiv = h("div", { class: "lists" });
