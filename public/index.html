@@ -98,7 +98,7 @@ a { color: var(--tint); }
   .btn:active, .icon-btn:active, .list-row:active, .g-btn:active, .chip:active { opacity: .55; }
 }
 
-.wrap { max-width: 720px; margin: 0 auto; padding-inline: 16px; display: flex; flex-direction: column; gap: 24px; padding-block-end: 8px; }
+.wrap { max-width: 720px; margin: 0 auto; padding-inline: 16px; display: flex; flex-direction: column; gap: 24px; padding-block: 20px 8px; }
 .svg-icon { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 /* ---------------- sign-in gate ---------------- */
@@ -132,23 +132,21 @@ a { color: var(--tint); }
 .brand-lockup { display: inline-flex; align-items: center; gap: 7px; }
 .brand-lockup img { width: 24px; height: 24px; border-radius: 6px; }
 .brand-lockup span { font: 700 15px/1 var(--font); letter-spacing: -.01em; color: var(--label); }
-/* the large-title block doubles as the brand surface: a navy card with a
-   thin gold rule and a faint icon watermark, once per screen */
-.large-title-block {
-  position: relative; overflow: hidden; border-radius: var(--radius-card); color: #fff;
-  padding: 14px 16px 13px; margin-top: 2px;
-  background: linear-gradient(165deg, var(--brand-navy) 0%, var(--brand-navy-deep) 130%);
-  box-shadow: var(--shadow-card);
+/* the hero doubles as the brand surface: a full-bleed navy band with a
+   thin gold rule and a faint icon watermark, flush with the nav bar */
+.hero-full {
+  position: relative; overflow: hidden; color: #fff;
+  background: linear-gradient(100deg, var(--brand-navy) 0%, var(--brand-navy-deep) 100%);
 }
-.large-title-block::after {
-  content: ""; position: absolute; top: -14px; right: -14px; width: 84px; height: 84px;
-  background: url("/icons/icon-192.png") center / contain no-repeat; opacity: .06; filter: saturate(0) brightness(2);
+.hero-full::after {
+  content: ""; position: absolute; top: 50%; right: 6%; width: 120px; height: 120px; transform: translateY(-50%);
+  background: url("/icons/icon-192.png") center / contain no-repeat; opacity: .08; filter: saturate(0) brightness(2);
   pointer-events: none;
 }
-.large-title-block .rule { width: 24px; height: 3px; background: var(--brand-gold); border-radius: 2px; margin: 0 0 6px; }
+.hero-full-inner { max-width: 720px; margin: 0 auto; padding: 18px 16px 17px; position: relative; z-index: 1; }
+.hero-full .rule { width: 24px; height: 3px; background: var(--brand-gold); border-radius: 2px; margin: 0 0 6px; }
 .large-title { font: var(--tx-title1); letter-spacing: -.01em; margin: 0; color: #fff; }
 .large-subtitle { font: var(--tx-footnote); color: rgba(255,255,255,.68); margin: 3px 0 0; max-width: 42ch; }
-.large-title-block .btn.plain { color: rgba(255,255,255,.85); }
 /* user menu: a compact avatar in the nav bar, tap to reveal a small
    popover with the signed-in name and Sign Out — replaces an
    always-visible name + text button with a native-feeling control */
@@ -335,12 +333,14 @@ a { color: var(--tint); }
       <div class="navbar-trailing whoami" id="home-whoami"></div>
     </div>
   </header>
-  <main class="wrap">
-    <div class="large-title-block" id="home-large-title">
+  <div class="hero-full" id="home-large-title">
+    <div class="hero-full-inner">
       <div class="rule" aria-hidden="true"></div>
       <h1 class="large-title">Your Lists</h1>
       <p class="large-subtitle">Every gift list you've created or been invited to.</p>
     </div>
+  </div>
+  <main class="wrap">
     <div class="toolbar-row">
       <button class="btn filled" id="create-list" type="button">Create New List</button>
     </div>
@@ -369,13 +369,15 @@ a { color: var(--tint); }
     </div>
   </header>
 
-  <main class="wrap">
-    <div class="large-title-block" id="app-large-title">
+  <div class="hero-full" id="app-large-title">
+    <div class="hero-full-inner">
       <div class="rule" aria-hidden="true"></div>
       <h1 class="large-title" id="title">Gift list</h1>
       <p class="large-subtitle">Shared gift ideas and purchases. Changes show up for everyone as they happen.</p>
     </div>
+  </div>
 
+  <main class="wrap">
     <div id="banner"></div>
 
     <form class="quick" id="quick" hidden>
