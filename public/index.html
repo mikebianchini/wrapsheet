@@ -278,7 +278,7 @@ a { color: var(--tint); }
 .g-thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: var(--bg-elevated-2); flex: none; }
 .g-main { min-width: 0; }
 .g-title { font: var(--tx-body); overflow-wrap: anywhere; color: var(--label); }
-.g-title a { color: inherit; text-decoration-color: var(--label-3); text-underline-offset: 3px; }
+.g-title-btn { display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; text-decoration-color: var(--label-3); text-underline-offset: 3px; }
 .g-note { color: var(--label-2); font: var(--tx-footnote); overflow-wrap: anywhere; margin-top: 1px; }
 .g-meta { color: var(--label-2); font: var(--tx-caption1); margin-top: 2px; }
 .g-side { text-align: right; display: flex; align-items: center; gap: 6px; }
@@ -915,7 +915,6 @@ const dbase = getFirestore(app);
     if (g.createdAt) addedBits.push(shortDate(g.createdAt));
     if (addedBits.length) meta.push("Added " + addedBits.join(" · "));
     if (g.status !== "idea" && g.boughtBy) meta.push("Bought by " + g.boughtBy);
-    var url = safeUrl(g.url);
     var pill = h("select", { class: "status-select", "data-s": g.status || "idea", "aria-label": "Change status for " + (g.title || "this gift") });
     STATUS.forEach(function (s) {
       var o = h("option", { value: s, text: LABEL[s] });
@@ -929,7 +928,7 @@ const dbase = getFirestore(app);
     return h("li", { class: "gift" },
       h("div", { class: "g-main" }, h("div", { class: "g-line" }, thumb,
         h("div", { style: "min-width:0;" },
-          h("div", { class: "g-title", title: g.title || "" }, url ? h("a", { href: url, target: "_blank", rel: "noopener noreferrer", text: truncate(g.title, 35) }) : truncate(g.title, 35)),
+          h("div", { class: "g-title", title: g.title || "" }, h("button", { class: "g-title-btn", type: "button", text: truncate(g.title, 35), onclick: function () { giftModal(g); } })),
           g.notes ? h("div", { class: "g-note", text: g.notes }) : null,
           meta.length ? h("div", { class: "g-meta", text: meta.join(" · ") }) : null))),
       h("div", { class: "g-side" },
