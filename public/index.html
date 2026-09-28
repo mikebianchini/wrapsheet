@@ -133,17 +133,18 @@ a { color: var(--tint); }
    that same header instead of a separate strip */
 .navbar { position: relative; z-index: 30; background: var(--brand-navy); border-bottom: 1px solid transparent; }
 .navbar.is-collapsed { border-bottom-color: rgba(255,255,255,.12); box-shadow: 0 1px 0 rgba(0,0,0,.15); }
-.navbar-inner { max-width: 720px; margin: 0 auto; padding-inline: 12px; min-height: 44px; display: flex; align-items: center; gap: 8px; }
-.navbar-leading, .navbar-trailing { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.navbar-inner { max-width: 720px; margin: 0 auto; padding-inline: 16px; min-height: 60px; display: flex; align-items: center; gap: 10px; }
+.navbar-leading, .navbar-trailing { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .navbar-trailing { margin-inline-start: auto; }
-.navbar-title { font: 600 15px/1.2 var(--font); color: #fff; opacity: 0; transform: translateY(4px); transition: opacity .18s var(--ease), transform .18s var(--ease); flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.navbar-title { font: 600 16px/1.2 var(--font); color: #fff; opacity: 0; transform: translateY(4px); transition: opacity .18s var(--ease), transform .18s var(--ease); flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .navbar.is-collapsed .navbar-title { opacity: 1; transform: none; }
-.back-btn { display: inline-flex; align-items: center; gap: 2px; border: 0; background: transparent; color: #fff; font: var(--tx-body); padding: 6px 4px 6px 0; cursor: pointer; opacity: .9; }
-.back-btn:hover { opacity: 1; }
-.back-btn svg { width: 22px; height: 22px; }
-.brand-lockup { display: inline-flex; align-items: center; gap: 7px; }
-.brand-lockup img { width: 24px; height: 24px; border-radius: 6px; box-shadow: 0 0 0 1px rgba(255,255,255,.18); }
-.brand-lockup span { font: 700 15px/1 var(--font); letter-spacing: -.01em; color: #fff; }
+.brand-lockup { display: inline-flex; align-items: center; gap: 9px; }
+.brand-lockup img { width: 32px; height: 32px; border-radius: 8px; box-shadow: 0 0 0 1px rgba(255,255,255,.18); }
+.brand-lockup span { font: 700 17px/1 var(--font); letter-spacing: -.01em; color: #fff; }
+button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: pointer; }
+.nav-new-btn { display: inline-flex; align-items: center; gap: 4px; border: 0; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff; font: 600 13px/1 var(--font); padding: 8px 12px; cursor: pointer; white-space: nowrap; }
+.nav-new-btn:hover { background: rgba(255,255,255,.22); }
+.nav-new-btn svg { width: 14px; height: 14px; }
 /* the hero doubles as the brand surface: a full-bleed navy band with a
    thin gold rule and a faint icon watermark, flush with the nav bar */
 .hero-full {
@@ -381,7 +382,13 @@ a { color: var(--tint); }
     <div class="navbar-inner">
       <div class="navbar-leading brand-lockup"><img src="/icons/icon-48.png" alt=""><span>WrapSheet</span></div>
       <span class="navbar-title">Your Lists</span>
-      <div class="navbar-trailing whoami" id="home-whoami"></div>
+      <div class="navbar-trailing">
+        <button class="nav-new-btn" id="home-new-list" type="button">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          New List
+        </button>
+        <div class="whoami" id="home-whoami"></div>
+      </div>
     </div>
   </header>
   <div class="hero-full" id="home-large-title">
@@ -408,14 +415,16 @@ a { color: var(--tint); }
   <header class="navbar" id="app-navbar">
     <div class="navbar-inner">
       <div class="navbar-leading">
-        <button class="back-btn" id="back-home" type="button" aria-label="Back to Your Lists">
-          <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        <button class="brand-lockup" id="back-home" type="button" aria-label="Back to Your Lists">
+          <img src="/icons/icon-48.png" alt="">
         </button>
-        <span class="brand-lockup"><img src="/icons/icon-48.png" alt=""></span>
       </div>
       <span class="navbar-title" id="title-inline">Gift list</span>
       <div class="navbar-trailing">
         <span class="days-badge" aria-live="polite"><b id="days">-</b> <span id="days-label">days</span></span>
+        <button class="nav-new-btn" id="board-new-list" type="button" aria-label="Create a new list">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
         <div class="whoami" id="whoami"></div>
       </div>
     </div>
@@ -1217,6 +1226,8 @@ const dbase = getFirestore(app);
     }, function (err) { console.error(err); toast("Couldn't duplicate the list."); resetBtn(); });
   }
   $("#create-list").addEventListener("click", createListModal);
+  $("#home-new-list").addEventListener("click", createListModal);
+  $("#board-new-list").addEventListener("click", createListModal);
   $("#join-form").addEventListener("submit", function (e) {
     e.preventDefault();
     var joinBtn = $("#join-form button[type=submit]");
