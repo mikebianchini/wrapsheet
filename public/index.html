@@ -235,6 +235,19 @@ a { color: var(--tint); }
 .search::placeholder { color: var(--label-2); }
 .person-filter { flex: 0 1 150px; min-width: 0; border: 0; background: var(--fill); border-radius: var(--radius-control); padding: 8px 10px; font: var(--tx-subhead); font-weight: 600; color: var(--label); }
 
+/* Recipients / Gifts view switcher */
+.view-tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--separator); }
+.view-tab { border: 0; background: transparent; padding: 4px 2px 10px; font: var(--tx-subhead); font-weight: 600; color: var(--label-2); cursor: pointer; position: relative; }
+.view-tab[aria-selected="true"] { color: var(--tint); }
+.view-tab[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; border-radius: 1px; background: var(--tint); }
+
+/* status-grouped accordion sections (Gifts tab) */
+.accordion-section { background: var(--bg-elevated); border-radius: var(--radius-card); overflow: hidden; box-shadow: var(--shadow-card); }
+.accordion-header { width: 100%; display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: transparent; border: 0; cursor: pointer; font: var(--tx-title3); color: var(--label); text-align: left; }
+.accordion-header .acc-count { font: var(--tx-footnote); font-weight: 600; color: var(--label-2); }
+.accordion-header .acc-chevron { margin-left: auto; color: var(--label-2); flex: none; width: 16px; height: 16px; transition: transform .15s var(--ease); transform: rotate(90deg); }
+.accordion-header[aria-expanded="false"] .acc-chevron { transform: rotate(0deg); }
+
 /* ---------------- grouped list sections (people / unsorted) ---------------- */
 .grid { display: flex; flex-direction: column; gap: 22px; }
 .section-header { font: var(--tx-caption2); text-transform: uppercase; letter-spacing: .05em; color: var(--label-2); padding: 0 4px 6px; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
@@ -436,6 +449,8 @@ a { color: var(--tint); }
 
     <section class="stats" id="stats" aria-label="Summary"></section>
 
+    <div class="view-tabs" id="view-tabs" role="tablist" aria-label="View"></div>
+
     <div class="bar">
       <div class="chips" id="chips" role="group" aria-label="Filter by status"></div>
       <select class="person-filter" id="person-filter" aria-label="Filter by person"></select>
@@ -490,8 +505,9 @@ const dbase = getFirestore(app);
   "use strict";
   var STATUS = ["idea", "bought", "wrapped"];
   var LABEL = { idea: "Idea", bought: "Bought", wrapped: "Wrapped" };
+  var PLURAL_LABEL = { idea: "Ideas", bought: "Bought", wrapped: "Wrapped" };
   var GROUPS = ["Family", "Friends", "Neighbors", "Other"];
-  var state = { people: [], gifts: [], gotP: false, gotG: false, filter: "all", personFilter: "all", q: "", uid: null, name: "you", error: "", boardName: "" };
+  var state = { people: [], gifts: [], gotP: false, gotG: false, filter: "all", personFilter: "all", q: "", uid: null, name: "you", error: "", boardName: "", view: "recipients", expandedStatus: { idea: true, bought: true, wrapped: true } };
   var toastTimer = null;
   var boardId = null, unsubP = null, unsubG = null, enrichAttempted = {};
 
@@ -839,13 +855,63 @@ const dbase = getFirestore(app);
 
   function renderChips() {
     var box = $("#chips"); box.textContent = "";
+    box.hidden = state.view === "gifts";
     [["all", "All"], ["idea", "Ideas"], ["bought", "Bought"], ["wrapped", "Wrapped"]].forEach(function (c) {
       box.appendChild(h("button", { class: "chip", type: "button", "aria-pressed": String(state.filter === c[0]), text: c[1], onclick: function () { state.filter = c[0]; render(); } }));
     });
   }
 
-  function giftRow(g) {
+  function renderViewTabs() {
+    var box = $("#view-tabs"); if (!box) return;
+    box.textContent = "";
+    [["recipients", "Recipients"], ["gifts", "Gifts"]].forEach(function (v) {
+      box.appendChild(h("button", {
+        class: "view-tab", type: "button", role: "tab", "aria-selected": String(state.view === v[0]), text: v[1],
+        onclick: function () { if (state.view !== v[0]) { state.view = v[0]; render(); } }
+      }));
+    });
+  }
+
+  function personNameFor(pid) {
+    var p = state.people.filter(function (x) { return x.id === pid; })[0];
+    return p ? p.name : "";
+  }
+
+  /* flat, status-grouped view of every gift on the board — a collapsible
+     accordion per status, each gift tagged with who it's for */
+  function renderGiftsView(container, gifts) {
+    STATUS.forEach(function (s) {
+      var list = gifts.filter(function (g) { return (g.status || "idea") === s; })
+        .sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
+      var expanded = state.expandedStatus[s] !== false;
+      var section = h("article", { class: "accordion-section" });
+      var chevron = svg(ICON_CHEVRON_RIGHT);
+      chevron.setAttribute("class", "svg-icon acc-chevron");
+      var header = h("button", { class: "accordion-header", type: "button", "aria-expanded": String(expanded) },
+        h("span", { text: PLURAL_LABEL[s] }),
+        h("span", { class: "acc-count", text: String(list.length) }),
+        chevron);
+      var body = h("div", { class: "accordion-body", hidden: !expanded });
+      if (list.length) {
+        var ul = h("ul", { class: "gifts" });
+        list.forEach(function (g) { ul.appendChild(giftRow(g, g.personId ? personNameFor(g.personId) : "Unsorted")); });
+        body.appendChild(ul);
+      } else {
+        body.appendChild(h("div", { class: "empty", text: "Nothing here yet." }));
+      }
+      header.addEventListener("click", function () {
+        state.expandedStatus[s] = !expanded;
+        render();
+      });
+      section.appendChild(header);
+      section.appendChild(body);
+      container.appendChild(section);
+    });
+  }
+
+  function giftRow(g, personName) {
     var meta = [];
+    if (personName) meta.push("For " + personName);
     var addedBits = [];
     if (g.addedBy) addedBits.push("by " + g.addedBy);
     if (g.createdAt) addedBits.push(shortDate(g.createdAt));
@@ -941,7 +1007,7 @@ const dbase = getFirestore(app);
     $("#invite").hidden = !!state.error;
     $("#quick").hidden = !!state.error;
     fillQuickPeople(); fillPersonFilter();
-    renderStats(); renderHeroBudget(); renderChips();
+    renderStats(); renderHeroBudget(); renderChips(); renderViewTabs();
     var app = $("#app"); app.textContent = "";
     if (state.error) return;
     if (!state.gotP || !state.gotG) { app.appendChild(h("div", { class: "blank", text: "Loading your list..." })); return; }
@@ -951,6 +1017,18 @@ const dbase = getFirestore(app);
       return;
     }
     var q = state.q.trim().toLowerCase(), filtering = state.filter !== "all" || state.personFilter !== "all" || !!q;
+    if (state.view === "gifts") {
+      var giftsForView = state.gifts.filter(function (g) {
+        if (state.personFilter !== "all" && g.personId !== state.personFilter) return false;
+        if (!q) return true;
+        var pMatch = g.personId && String(personNameFor(g.personId)).toLowerCase().indexOf(q) >= 0;
+        return pMatch || (String(g.title) + " " + String(g.notes || "")).toLowerCase().indexOf(q) >= 0;
+      });
+      var accWrap = h("div", { class: "grid" });
+      renderGiftsView(accWrap, giftsForView);
+      app.appendChild(giftsForView.length ? accWrap : h("div", { class: "blank", text: "Nothing matches that filter." }));
+      return;
+    }
     var grid = h("div", { class: "grid" }), shown = 0;
     if (state.personFilter === "all") {
       var unsorted = state.gifts.filter(function (g) { return !g.personId; }).filter(function (g) {
