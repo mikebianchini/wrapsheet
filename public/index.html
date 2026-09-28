@@ -9,187 +9,247 @@
 <link rel="icon" type="image/png" sizes="48x48" href="/icons/icon-48.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png">
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#A62B45">
+<meta name="theme-color" content="#F2F2F7">
 <style>
+/* ---------------------------------------------------------------------
+   Apple Human Interface Guidelines tokens.
+   Semantic system colors, materials and type scale — not an
+   HIG-flavored original palette, the literal published values.
+   https://developer.apple.com/design/human-interface-guidelines/
+--------------------------------------------------------------------- */
 :root {
-  --bg: #F2F2F7; --surface: rgba(255,255,255,.72); --surface-2: rgba(120,120,128,.12); --surface-solid: #FFFFFF;
-  --ink: #1C1C1E; --muted: #6E6E73; --line: rgba(60,60,67,.13);
-  --accent: #A9791F; --accent-2: #16233F; --accent-ink: #FFFFFF;
-  --idea: #0A84FF; --idea-bg: rgba(10,132,255,.12); --bought: #30B558; --bought-bg: rgba(48,181,88,.14);
-  --wrapped: #FF9500; --wrapped-bg: rgba(255,149,0,.16); --focus: #0A84FF;
-  --glass-blur: blur(26px) saturate(180%);
-  --shadow-sm: 0 1px 1px rgba(0,0,0,.03), 0 2px 8px rgba(0,0,0,.05);
-  --shadow-md: 0 1px 2px rgba(0,0,0,.04), 0 16px 32px -16px rgba(0,0,0,.22);
-  --shadow-lg: 0 8px 16px -4px rgba(0,0,0,.12), 0 24px 48px -20px rgba(0,0,0,.28);
-  --ease: cubic-bezier(.4,0,.2,1);
-  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  /* system colors (light) */
+  --blue: #007AFF; --green: #34C759; --orange: #FF9500; --red: #FF3B30; --gray: #8E8E93;
+  --tint: var(--blue);
+  --blue-bg: rgba(0,122,255,.12); --green-bg: rgba(52,199,89,.14); --orange-bg: rgba(255,149,0,.14); --red-bg: rgba(255,59,48,.12);
+
+  /* labels */
+  --label: rgba(0,0,0,.92); --label-2: rgba(60,60,67,.6); --label-3: rgba(60,60,67,.3);
+
+  /* backgrounds: systemGroupedBackground (page) / secondary (elevated row/card) / tertiary (nested field) */
+  --bg: #F2F2F7; --bg-elevated: #FFFFFF; --bg-elevated-2: #F2F2F7; --bg-navbar: rgba(242,242,247,.82);
+  --fill: rgba(120,120,128,.2); --fill-2: rgba(120,120,128,.12);
+  --separator: rgba(60,60,67,.29); --opaque-separator: #C6C6C8;
+
+  /* brand: the WrapSheet mark's own navy/gold, used only for the app icon
+     and the one signature countdown badge — never a competing UI palette */
+  --brand-navy: #0F2A4A; --brand-gold: #D9A73B;
+
+  --radius-control: 10px; --radius-card: 14px; --radius-sheet: 20px;
+  --shadow-card: 0 1px 2px rgba(0,0,0,.06), 0 1px 1px rgba(0,0,0,.04);
+  --shadow-sheet: 0 2px 6px rgba(0,0,0,.1), 0 24px 48px -20px rgba(0,0,0,.3);
+  --material-thin: blur(20px) saturate(180%);
+  --ease: cubic-bezier(.25,.1,.25,1);
+
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+
+  /* HIG type scale (size/line-height) */
+  --tx-large-title: 700 34px/41px var(--font);
+  --tx-title1: 700 28px/34px var(--font);
+  --tx-title2: 700 22px/28px var(--font);
+  --tx-title3: 600 20px/25px var(--font);
+  --tx-headline: 600 17px/22px var(--font);
+  --tx-body: 400 17px/22px var(--font);
+  --tx-callout: 400 16px/21px var(--font);
+  --tx-subhead: 400 15px/20px var(--font);
+  --tx-footnote: 400 13px/18px var(--font);
+  --tx-caption1: 400 12px/16px var(--font);
+  --tx-caption2: 600 11px/13px var(--font);
+
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root { color-scheme: dark; --bg: #000000; --surface: rgba(28,28,30,.72); --surface-2: rgba(118,118,128,.24); --surface-solid: #1C1C1E;
-    --ink: #F5F5F7; --muted: #98989F; --line: rgba(84,84,88,.55);
-    --accent: #E8B64A; --accent-2: #9FB6E0; --accent-ink: #1A1206;
-    --idea: #409CFF; --idea-bg: rgba(64,156,255,.2); --bought: #32D74B; --bought-bg: rgba(50,215,75,.18);
-    --wrapped: #FFA426; --wrapped-bg: rgba(255,164,38,.2); --focus: #409CFF;
-    --shadow-sm: 0 1px 1px rgba(0,0,0,.4), 0 2px 10px rgba(0,0,0,.45);
-    --shadow-md: 0 1px 2px rgba(0,0,0,.5), 0 16px 36px -16px rgba(0,0,0,.7);
-    --shadow-lg: 0 8px 20px -4px rgba(0,0,0,.55), 0 28px 56px -20px rgba(0,0,0,.8);
+  :root {
+    color-scheme: dark;
+    --blue: #0A84FF; --green: #30D158; --orange: #FF9F0A; --red: #FF453A; --gray: #8E8E93;
+    --blue-bg: rgba(10,132,255,.22); --green-bg: rgba(48,209,88,.2); --orange-bg: rgba(255,159,10,.2); --red-bg: rgba(255,69,58,.2);
+    --label: rgba(255,255,255,.92); --label-2: rgba(235,235,245,.6); --label-3: rgba(235,235,245,.3);
+    --bg: #000000; --bg-elevated: #1C1C1E; --bg-elevated-2: #2C2C2E; --bg-navbar: rgba(0,0,0,.72);
+    --fill: rgba(120,120,128,.36); --fill-2: rgba(120,120,128,.24);
+    --separator: rgba(84,84,88,.65); --opaque-separator: #38383A;
+    --brand-gold: #E8BE5D;
+    --shadow-card: 0 1px 2px rgba(0,0,0,.5), 0 1px 1px rgba(0,0,0,.4);
+    --shadow-sheet: 0 2px 8px rgba(0,0,0,.6), 0 28px 56px -20px rgba(0,0,0,.8);
   }
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; }
 body {
-  background: var(--bg); color: var(--ink); font: 400 15px/1.5 var(--font-body); -webkit-font-smoothing: antialiased;
-  padding-inline: 16px; padding-block: max(24px, env(safe-area-inset-top)) max(64px, env(safe-area-inset-bottom));
-  position: relative;
+  background: var(--bg); color: var(--label); font: var(--tx-body); -webkit-font-smoothing: antialiased;
+  padding-block-end: max(32px, env(safe-area-inset-bottom));
 }
-body::before {
-  content: ""; position: fixed; inset: -10%; z-index: -1; pointer-events: none; filter: blur(60px);
-  background:
-    radial-gradient(560px 480px at 12% -8%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 62%),
-    radial-gradient(520px 460px at 104% 6%, color-mix(in srgb, var(--idea) 14%, transparent), transparent 60%),
-    radial-gradient(600px 500px at 50% 115%, color-mix(in srgb, var(--bought) 10%, transparent), transparent 65%);
-}
-.wrap { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
 button, input, select, textarea { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+:focus-visible { outline: 2px solid var(--tint); outline-offset: 2px; border-radius: 6px; }
 [hidden] { display: none !important; }
 img { max-width: 100%; }
+::selection { background: var(--blue-bg); color: var(--label); }
+a { color: var(--tint); }
 @media (prefers-reduced-motion: no-preference) {
-  button, .chip, .pill, .list-card, .person { transition: transform .18s var(--ease), background-color .18s var(--ease), box-shadow .18s var(--ease), border-color .18s var(--ease), opacity .18s var(--ease); }
-  .btn:active, .chip:active, .pill:active, .list-card:active, .g-btn:active { transform: scale(.96); }
+  .btn, .icon-btn, .list-row, .gift, .chip { transition: opacity .15s var(--ease), background-color .15s var(--ease), box-shadow .15s var(--ease); }
+  .btn:active, .icon-btn:active, .list-row:active, .g-btn:active, .chip:active { opacity: .55; }
 }
 
-.gate { min-height: 70vh; display: flex; align-items: center; justify-content: center; text-align: center; }
-.gate-box { display: flex; flex-direction: column; gap: 18px; align-items: center; max-width: 340px; }
-.gate-box h1 { font: 800 2.1rem/1.1 var(--font-display); letter-spacing: -.02em; margin: 0; background: linear-gradient(180deg, var(--ink), color-mix(in srgb, var(--ink) 70%, var(--accent))); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.gate-box p { color: var(--muted); margin: 0; }
-.g-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--line); border-radius: 999px; padding: 13px 24px; font-weight: 600; cursor: pointer; box-shadow: var(--shadow-sm); }
-.g-btn:hover { box-shadow: var(--shadow-md); }
+.wrap { max-width: 720px; margin: 0 auto; padding-inline: 16px; display: flex; flex-direction: column; gap: 24px; padding-block-end: 8px; }
+.svg-icon { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------------- sign-in gate ---------------- */
+.gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+.gate-box { display: flex; flex-direction: column; gap: 16px; align-items: center; max-width: 320px; }
+.gate-box img { width: 72px; height: 72px; border-radius: 18px; box-shadow: var(--shadow-card); }
+.gate-box h1 { font: var(--tx-large-title); letter-spacing: -.02em; margin: 4px 0 0; color: var(--label); }
+.gate-box p { color: var(--label-2); margin: 0; font: var(--tx-subhead); }
+.g-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--bg-elevated); border: 1px solid var(--opaque-separator); border-radius: var(--radius-control); padding: 12px 20px; font: var(--tx-headline); color: var(--label); cursor: pointer; margin-top: 8px; }
+.g-btn:hover { background: var(--fill-2); }
 .g-btn svg { width: 18px; height: 18px; }
 
-.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 32px; }
-.top h1 { font: 800 clamp(2rem, 6vw, 3.2rem)/1 var(--font-display); letter-spacing: -0.03em; margin: 0; text-wrap: balance; }
-.top .sub { color: var(--muted); margin-top: 8px; }
-.whoami { display: flex; align-items: center; gap: 10px; background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px 6px 6px; box-shadow: var(--shadow-sm); }
-.whoami img { width: 28px; height: 28px; border-radius: 50%; }
-.countdown { display: flex; align-items: baseline; gap: 10px; }
-.countdown b { font: 800 clamp(2.4rem, 7vw, 3.6rem)/1 var(--font-display); letter-spacing: -.02em; color: var(--accent); font-variant-numeric: tabular-nums; }
-.countdown span { color: var(--muted); max-width: 9ch; line-height: 1.25; }
+/* ---------------- navigation bar (sticky, large-title collapse) ---------------- */
+.navbar { position: sticky; top: 0; z-index: 30; background: transparent; border-bottom: 1px solid transparent; }
+.navbar.is-collapsed { background: var(--bg-navbar); backdrop-filter: var(--material-thin); -webkit-backdrop-filter: var(--material-thin); border-bottom-color: var(--separator); }
+.navbar-inner { max-width: 720px; margin: 0 auto; padding-inline: 12px; min-height: 44px; display: flex; align-items: center; gap: 8px; }
+.navbar-leading, .navbar-trailing { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.navbar-trailing { margin-inline-start: auto; }
+.navbar-title { font: var(--tx-headline); opacity: 0; transform: translateY(4px); transition: opacity .18s var(--ease), transform .18s var(--ease); flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.navbar.is-collapsed .navbar-title { opacity: 1; transform: none; }
+.back-btn { display: inline-flex; align-items: center; gap: 2px; border: 0; background: transparent; color: var(--tint); font: var(--tx-body); padding: 6px 4px 6px 0; cursor: pointer; }
+.back-btn svg { width: 22px; height: 22px; }
+.large-title-block { padding: 4px 0 2px; }
+.large-title { font: var(--tx-large-title); letter-spacing: -.02em; margin: 0; color: var(--label); }
+.large-subtitle { font: var(--tx-subhead); color: var(--label-2); margin: 4px 0 0; }
+.whoami { display: flex; align-items: center; gap: 8px; }
+.whoami img { width: 26px; height: 26px; border-radius: 50%; }
+.whoami-name { font: var(--tx-footnote); color: var(--label-2); max-width: 11ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.days-badge { display: inline-flex; align-items: baseline; gap: 3px; background: var(--red-bg); color: var(--red); border-radius: 999px; padding: 4px 10px; font: var(--tx-caption2); letter-spacing: 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.days-badge b { font: 700 13px/1 var(--font); }
 
-.stats { display: flex; flex-wrap: wrap; background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow-sm); overflow: hidden; }
-.stat { flex: 1 1 140px; padding: 16px 18px; display: flex; flex-direction: column; gap: 2px; border-inline-start: 1px solid var(--line); }
-.stat:first-child { border-inline-start: 0; }
-.stat .k { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
-.stat .v { font: 800 1.7rem/1.15 var(--font-display); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-.stat .v small { font: 500 .85rem var(--font-body); color: var(--muted); }
+/* ---------------- buttons ---------------- */
+.btn { border: 0; background: var(--fill); border-radius: var(--radius-control); padding: 8px 14px; cursor: pointer; font: var(--tx-subhead); font-weight: 600; color: var(--tint); }
+.btn:hover { background: var(--fill-2); }
+.btn.filled { background: var(--tint); color: #fff; }
+.btn.filled:hover { filter: brightness(1.06); }
+.btn.plain { background: transparent; padding: 8px 6px; }
+.btn.plain:hover { background: transparent; text-decoration: underline; }
+.btn.danger { color: var(--red); }
+.btn[disabled] { opacity: .5; cursor: default; }
+.icon-btn { border: 0; background: transparent; color: var(--label-2); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; }
+.icon-btn:hover { background: var(--fill-2); color: var(--label); }
+.icon-btn svg { width: 18px; height: 18px; }
 
-.quick { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); box-shadow: var(--shadow-sm); position: sticky; top: 8px; z-index: 5; }
-.quick input { flex: 1 1 220px; min-width: 0; border: 1px solid transparent; background: var(--surface-2); border-radius: 14px; padding: 10px 14px; }
-.quick input:focus-visible { border-color: var(--focus); }
-.quick select { flex: 0 1 150px; min-width: 0; border: 1px solid transparent; background: var(--surface-2); border-radius: 14px; padding: 10px 12px; }
+.notice { border: 1px solid var(--separator); background: var(--bg-elevated); border-radius: var(--radius-card); padding: 12px 14px; color: var(--label-2); font: var(--tx-subhead); }
 
-.bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-.chips { display: flex; flex-wrap: wrap; gap: 2px; background: var(--surface-2); border-radius: 999px; padding: 3px; }
-.chip { border: 0; background: transparent; border-radius: 999px; padding: 6px 14px; cursor: pointer; font-weight: 600; color: var(--muted); }
-.chip[aria-pressed="true"] { background: var(--surface-solid); color: var(--ink); box-shadow: var(--shadow-sm); }
-.search { flex: 1 1 180px; min-width: 0; max-width: 320px; border: 1px solid transparent; background: var(--surface-2); border-radius: 999px; padding: 9px 16px; }
-.person-filter { flex: 0 1 170px; min-width: 0; border: 1px solid transparent; background: var(--surface-2); border-radius: 999px; padding: 9px 30px 9px 16px; font-weight: 600; }
+/* ---------------- toolbar row (below large title) ---------------- */
+.toolbar-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .spacer { flex: 1 1 0; }
-.btn { border: 1px solid var(--line); background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border-radius: 999px; padding: 9px 18px; cursor: pointer; font-weight: 600; box-shadow: var(--shadow-sm); }
-.btn:hover { box-shadow: var(--shadow-md); }
-.btn.primary { background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 100%, white 8%), var(--accent)); color: var(--accent-ink); border-color: transparent; box-shadow: var(--shadow-md); }
-.btn.primary:hover { filter: brightness(1.06); }
-.btn.danger { color: #FF3B30; }
-.btn.link { border: 0; background: transparent; padding: 4px 8px; color: var(--muted); font-weight: 500; box-shadow: none; }
-.btn.link:hover { color: var(--ink); background: transparent; text-decoration: underline; box-shadow: none; }
 
-.notice { border: 1px solid var(--line); background: var(--surface-2); border-radius: 16px; padding: 10px 16px; color: var(--muted); }
-.notice.share { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
-.notice.share code { background: var(--surface-solid); border: 1px solid var(--line); border-radius: 8px; padding: 3px 8px; overflow-wrap: anywhere; }
+/* quick add — styled as a grouped input row */
+.quick { display: flex; gap: 8px; background: var(--bg-elevated); border-radius: var(--radius-card); padding: 8px; box-shadow: var(--shadow-card); }
+.quick input { flex: 1 1 220px; min-width: 0; border: 0; background: var(--bg-elevated-2); border-radius: var(--radius-control); padding: 9px 12px; font: var(--tx-body); }
+.quick select { flex: 0 1 140px; min-width: 0; border: 0; background: var(--bg-elevated-2); border-radius: var(--radius-control); padding: 9px 10px; font: var(--tx-subhead); }
 
-/* home / my lists */
-.crumb { border: 0; background: transparent; padding: 4px 0; color: var(--muted); font-weight: 600; cursor: pointer; }
-.crumb:hover { color: var(--ink); text-decoration: underline; }
-.home-top h1 { font: 800 clamp(1.8rem, 5vw, 2.6rem)/1.1 var(--font-display); letter-spacing: -.02em; margin: 0 0 6px; }
-.home-top p { color: var(--muted); margin: 0; }
-.join-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.join-row input { flex: 1 1 220px; min-width: 0; border: 1px solid transparent; background: var(--surface-2); border-radius: 14px; padding: 10px 14px; }
-.lists { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 14px; }
-.list-card { background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--line); border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 10px; text-align: left; cursor: pointer; box-shadow: var(--shadow-sm); }
-.list-card:hover { box-shadow: var(--shadow-md); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
-.list-card h3 { font: 700 1.15rem/1.25 var(--font-display); letter-spacing: -.01em; margin: 0; overflow-wrap: anywhere; }
-.list-card .role { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
-.list-card .leave { align-self: flex-end; }
+/* summary stats — plain grouped row, no card chrome competing with content */
+.stats { display: flex; background: var(--bg-elevated); border-radius: var(--radius-card); box-shadow: var(--shadow-card); overflow: hidden; }
+.stat { flex: 1 1 0; padding: 10px 8px; display: flex; flex-direction: column; align-items: center; gap: 1px; border-inline-start: 1px solid var(--separator); }
+.stat:first-child { border-inline-start: 0; }
+.stat .k { font: var(--tx-caption1); text-transform: uppercase; letter-spacing: .03em; color: var(--label-2); }
+.stat .v { font: 600 19px/1.2 var(--font); letter-spacing: -.01em; font-variant-numeric: tabular-nums; color: var(--label); }
+.stat .v small { font: 400 11px var(--font); color: var(--label-2); }
 
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 20px; align-items: start; }
-.person { background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--line); border-radius: 22px; display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-sm); }
-.person:hover { box-shadow: var(--shadow-md); }
-.p-head { padding: 18px 18px 12px; display: flex; flex-direction: column; gap: 10px; }
+/* filter bar: segmented control + person menu + search */
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chips { display: flex; background: var(--fill); border-radius: var(--radius-control); padding: 2px; gap: 2px; flex: 1 1 240px; }
+.chip { flex: 1; border: 0; background: transparent; border-radius: 8px; padding: 6px 8px; cursor: pointer; font: var(--tx-footnote); font-weight: 600; color: var(--label); }
+.chip[aria-pressed="true"] { background: var(--bg-elevated); box-shadow: var(--shadow-card); }
+.search { flex: 1 1 160px; min-width: 0; border: 0; background: var(--fill); border-radius: var(--radius-control); padding: 8px 12px; font: var(--tx-subhead); }
+.search::placeholder { color: var(--label-2); }
+.person-filter { flex: 0 1 150px; min-width: 0; border: 0; background: var(--fill); border-radius: var(--radius-control); padding: 8px 10px; font: var(--tx-subhead); font-weight: 600; color: var(--label); }
+
+/* ---------------- grouped list sections (people / unsorted) ---------------- */
+.grid { display: flex; flex-direction: column; gap: 22px; }
+.section-header { font: var(--tx-caption2); text-transform: uppercase; letter-spacing: .05em; color: var(--label-2); padding: 0 4px 6px; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.person { background: var(--bg-elevated); border-radius: var(--radius-card); overflow: hidden; box-shadow: var(--shadow-card); }
+.p-head { padding: 12px 14px 10px; display: flex; flex-direction: column; gap: 4px; }
 .p-title { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.p-title h2 { font: 700 1.35rem/1.2 var(--font-display); letter-spacing: -.01em; margin: 0; overflow-wrap: anywhere; }
-.group { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 600; }
-.budget { display: flex; flex-direction: column; gap: 6px; font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-.meter { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
-.meter i { display: block; height: 100%; background: var(--bought); border-radius: 3px; }
-.meter.over i { background: #FF3B30; }
-.over-text { color: #FF3B30; font-weight: 600; }
-.gifts { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
-.gift { padding: 15px 18px; display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; align-items: center; border-bottom: 1px solid var(--line); }
+.p-title h2 { font: var(--tx-title3); margin: 0; overflow-wrap: anywhere; color: var(--label); }
+.prefs { color: var(--label-2); font: var(--tx-footnote); overflow-wrap: anywhere; }
+.budget { display: flex; flex-direction: column; gap: 5px; font: var(--tx-footnote); color: var(--label-2); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.meter { height: 4px; border-radius: 2px; background: var(--fill); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--green); border-radius: 2px; }
+.meter.over i { background: var(--red); }
+.over-text { color: var(--red); font-weight: 600; }
+
+.gifts { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--separator); }
+.gift { padding: 10px 14px; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; border-bottom: 1px solid var(--separator); }
 .gift:last-child { border-bottom: 0; }
-.pill { border: 0; border-radius: 999px; padding: 4px 9px; font-size: .6rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
-.pill.status-select { font-family: inherit; padding-right: 8px; }
-.pill.status-select:focus-visible { outline-offset: 1px; }
-.pill[data-s="idea"] { background: var(--idea-bg); color: var(--idea); }
-.pill[data-s="bought"] { background: var(--bought-bg); color: var(--bought); }
-.pill[data-s="wrapped"] { background: var(--wrapped-bg); color: var(--wrapped); }
+.g-line { display: flex; gap: 10px; align-items: center; min-width: 0; }
+.g-thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: var(--bg-elevated-2); flex: none; }
 .g-main { min-width: 0; }
-.g-title { font-weight: 600; font-size: .98rem; line-height: 1.3; overflow-wrap: anywhere; }
-.g-title a { color: inherit; text-decoration-color: var(--muted); text-underline-offset: 3px; }
-.g-note { color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; }
-.g-meta { color: var(--muted); font-size: .75rem; margin-top: 2px; }
-.g-side { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
-.g-price { font-weight: 600; font-variant-numeric: tabular-nums; }
-.empty { padding: 16px 18px; color: var(--muted); border-top: 1px solid var(--line); font-size: .9rem; }
-.p-foot { padding: 10px 14px; border-top: 1px solid var(--line); background: var(--surface-2); display: flex; justify-content: space-between; }
-.p-foot .btn { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; border-color: transparent; box-shadow: none; }
+.g-title { font: var(--tx-body); overflow-wrap: anywhere; color: var(--label); }
+.g-title a { color: inherit; text-decoration-color: var(--label-3); text-underline-offset: 3px; }
+.g-note { color: var(--label-2); font: var(--tx-footnote); overflow-wrap: anywhere; margin-top: 1px; }
+.g-meta { color: var(--label-2); font: var(--tx-caption1); margin-top: 2px; }
+.g-side { text-align: right; display: flex; align-items: center; gap: 6px; }
+.g-price { font: var(--tx-subhead); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--label); white-space: nowrap; }
 
-.prefs { color: var(--muted); font-size: .8rem; overflow-wrap: anywhere; }
-.owner-row { padding: 8px 18px 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.owner-badge { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); border-radius: 999px; padding: 3px 9px; }
-.surprise-banner { margin: 0 18px 6px; padding: 9px 13px; border-radius: 12px; background: var(--surface-2); color: var(--muted); font-size: .78rem; }
-.pill.hidden-status { background: var(--surface-2); color: var(--muted); cursor: default; }
-.g-line { display: flex; gap: 12px; align-items: center; }
-.g-thumb { width: 54px; height: 54px; border-radius: 13px; object-fit: cover; background: var(--surface-2); flex: none; box-shadow: var(--shadow-sm); }
-.modal-thumb { width: 72px; height: 72px; border-radius: 16px; object-fit: cover; background: var(--surface-2); box-shadow: var(--shadow-sm); align-self: flex-start; }
-.toast-row { display: flex; align-items: center; gap: 12px; }
-.toast-row button { border: 0; background: transparent; color: var(--bg); font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0; white-space: nowrap; }
-.activity-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto; }
-.activity-list li { font-size: .85rem; color: var(--ink); border-bottom: 1px solid var(--line); padding-bottom: 10px; }
-.activity-list li:last-child { border-bottom: 0; padding-bottom: 0; }
-.activity-list .when { color: var(--muted); font-size: .72rem; margin-top: 2px; }
-.blank { text-align: center; color: var(--muted); padding: 44px 16px; border: 1.5px dashed var(--line); border-radius: 20px; background: var(--surface-2); }
+/* status: plain colored value text + a small select for changing it */
+.status-select { appearance: none; -webkit-appearance: none; border: 0; background: transparent; cursor: pointer; font: var(--tx-footnote); font-weight: 600; text-align: right; padding-right: 2px; }
+.status-select[data-s="idea"] { color: var(--blue); }
+.status-select[data-s="bought"] { color: var(--green); }
+.status-select[data-s="wrapped"] { color: var(--orange); }
 
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.42); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; z-index: 10; }
-.modal { background: var(--surface-solid); border: 1px solid var(--line); border-radius: 26px; width: 100%; max-width: 460px; padding: 22px; display: flex; flex-direction: column; gap: 14px; margin-block: auto; box-shadow: var(--shadow-lg); }
-.modal h3 { font: 700 1.3rem/1.2 var(--font-display); letter-spacing: -.01em; margin: 0; }
+.empty { padding: 14px; color: var(--label-2); border-top: 1px solid var(--separator); font: var(--tx-subhead); }
+.p-foot { padding: 8px 10px; border-top: 1px solid var(--separator); display: flex; justify-content: space-between; }
+
+.owner-row { padding: 6px 14px 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.owner-badge { font: var(--tx-caption1); font-weight: 600; color: var(--label-2); background: var(--fill-2); border-radius: 999px; padding: 3px 9px; }
+
+/* ---------------- home: list of lists ---------------- */
+.join-row { display: flex; gap: 8px; background: var(--bg-elevated); border-radius: var(--radius-card); padding: 8px; box-shadow: var(--shadow-card); }
+.join-row input { flex: 1 1 220px; min-width: 0; border: 0; background: var(--bg-elevated-2); border-radius: var(--radius-control); padding: 9px 12px; font: var(--tx-body); }
+.lists { background: var(--bg-elevated); border-radius: var(--radius-card); box-shadow: var(--shadow-card); overflow: hidden; }
+.list-row { width: 100%; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--separator); padding: 12px 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+.list-row:last-child { border-bottom: 0; }
+.list-row:hover { background: var(--fill-2); }
+.list-row-main { flex: 1; min-width: 0; }
+.list-row h3 { font: var(--tx-body); font-weight: 600; margin: 0; overflow-wrap: anywhere; color: var(--label); }
+.list-row .role { font: var(--tx-footnote); color: var(--label-2); }
+.list-row-actions { display: flex; gap: 4px; flex: none; }
+.list-row-actions .btn { padding: 5px 9px; font: var(--tx-caption1); font-weight: 600; }
+.chevron { color: var(--label-3); flex: none; width: 16px; height: 16px; }
+
+/* ---------------- sheets (modals) ---------------- */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; z-index: 40; }
+.modal { background: var(--bg-elevated); border-radius: var(--radius-sheet); width: 100%; max-width: 440px; padding: 20px; display: flex; flex-direction: column; gap: 14px; margin-block: auto; box-shadow: var(--shadow-sheet); }
+.modal h3 { font: var(--tx-title3); margin: 0; color: var(--label); }
 .field { display: flex; flex-direction: column; gap: 4px; }
-.field label { font-size: .78rem; font-weight: 600; color: var(--muted); }
-.field input, .field select, .field textarea { border: 1px solid transparent; background: var(--surface-2); border-radius: 14px; padding: 10px 13px; width: 100%; min-width: 0; }
-.field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible { border-color: var(--focus); }
-.field textarea { resize: vertical; min-height: 64px; }
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field label { font: var(--tx-footnote); font-weight: 600; color: var(--label-2); }
+.field input, .field select, .field textarea { border: 0; background: var(--bg-elevated-2); border-radius: var(--radius-control); padding: 10px 12px; width: 100%; min-width: 0; font: var(--tx-body); }
+.field textarea { resize: vertical; min-height: 60px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: color-mix(in srgb, var(--ink) 92%, transparent); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); color: var(--bg); padding: 11px 20px; border-radius: 999px; z-index: 20; max-width: calc(100% - 32px); box-shadow: var(--shadow-lg); }
-@media (max-width: 480px) { .row2 { grid-template-columns: 1fr; } .quick { position: static; } }
-@media (prefers-reduced-motion: no-preference) { .meter i { transition: width .3s var(--ease); } }
+.modal-thumb { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; background: var(--bg-elevated-2); align-self: flex-start; }
 
-.ptr { position: fixed; top: 10px; left: 50%; width: 40px; height: 40px; margin-left: -20px;
-  border-radius: 50%; background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--line); box-shadow: var(--shadow-md);
+.notice.share { display: flex; flex-direction: column; gap: 8px; }
+.notice.share code { display: block; background: var(--bg-elevated-2); border-radius: 8px; padding: 8px 10px; overflow-wrap: anywhere; font-size: 13px; }
+.activity-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 60vh; overflow-y: auto; }
+.activity-list li { font: var(--tx-subhead); color: var(--label); border-bottom: 1px solid var(--separator); padding: 8px 0; }
+.activity-list li:last-child { border-bottom: 0; }
+.activity-list .when { color: var(--label-2); font: var(--tx-caption1); margin-top: 2px; }
+
+.blank { text-align: center; color: var(--label-2); padding: 40px 16px; font: var(--tx-subhead); }
+
+/* HUD-style toast — a true overlay, so it earns vibrancy */
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--label) 88%, transparent); backdrop-filter: var(--material-thin); -webkit-backdrop-filter: var(--material-thin);
+  color: var(--bg); padding: 10px 18px; border-radius: 999px; z-index: 50; max-width: calc(100% - 32px); box-shadow: var(--shadow-sheet); font: var(--tx-subhead); }
+.toast-row { display: flex; align-items: center; gap: 12px; }
+.toast-row button { border: 0; background: transparent; color: var(--bg); font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0; white-space: nowrap; font: inherit; }
+
+@media (max-width: 480px) { .row2 { grid-template-columns: 1fr; } }
+
+.ptr { position: fixed; top: 6px; left: 50%; width: 36px; height: 36px; margin-left: -18px;
+  border-radius: 50%; background: var(--bg-elevated); box-shadow: var(--shadow-card);
   display: flex; align-items: center; justify-content: center; z-index: 50; opacity: 0; pointer-events: none;
   transform: translateY(-60px); }
-.ptr svg { width: 18px; height: 18px; stroke: var(--accent); }
+.ptr svg { width: 16px; height: 16px; stroke: var(--tint); }
 .ptr.busy svg { animation: ptr-spin .8s linear infinite; }
 @keyframes ptr-spin { to { transform: rotate(360deg); } }
 </style>
@@ -202,6 +262,7 @@ img { max-width: 100%; }
 
 <div id="gate" class="gate">
   <div class="gate-box">
+    <img src="/icons/icon-192.png" alt="" width="72" height="72">
     <h1>WrapSheet</h1>
     <p>Sign in with Google to create a gift list or open one you've been invited to.</p>
     <button class="g-btn" id="google-in" type="button">
@@ -211,60 +272,80 @@ img { max-width: 100%; }
   </div>
 </div>
 
-<div id="home-root" class="wrap" hidden>
-  <header class="top">
-    <div class="home-top">
-      <h1>Your lists</h1>
-      <p>Every gift list you've created or been invited to.</p>
+<div id="home-root" hidden>
+  <header class="navbar" id="home-navbar">
+    <div class="navbar-inner">
+      <span class="navbar-title">Your Lists</span>
+      <div class="navbar-trailing whoami" id="home-whoami"></div>
     </div>
-    <div class="whoami" id="home-whoami"></div>
   </header>
-  <div class="bar">
-    <button class="btn primary" id="create-list" type="button">Create new list</button>
-    <span class="spacer"></span>
-  </div>
-  <form class="join-row" id="join-form">
-    <input id="join-input" type="text" placeholder="Paste an invite link to join someone else's list" aria-label="Paste an invite link">
-    <button class="btn" type="submit">Join list</button>
-  </form>
-  <main id="home-lists"><div class="blank">Loading your lists...</div></main>
+  <main class="wrap">
+    <div class="large-title-block" id="home-large-title">
+      <h1 class="large-title">Your Lists</h1>
+      <p class="large-subtitle">Every gift list you've created or been invited to.</p>
+    </div>
+    <div class="toolbar-row">
+      <button class="btn filled" id="create-list" type="button">Create New List</button>
+    </div>
+    <form class="join-row" id="join-form">
+      <input id="join-input" type="text" placeholder="Paste an invite link to join" aria-label="Paste an invite link">
+      <button class="btn" type="submit">Join</button>
+    </form>
+    <main id="home-lists"><div class="blank">Loading your lists…</div></main>
+  </main>
 </div>
 
-<div id="app-root" class="wrap" hidden>
-  <header class="top">
-    <div>
-      <button class="crumb" id="back-home" type="button">&larr; Your lists</button>
-      <h1 id="title">Gift list</h1>
-      <div class="sub">Shared gift ideas and purchases. Changes show up for everyone as they happen.</div>
-    </div>
-    <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
-      <div class="countdown" aria-live="polite"><b id="days">-</b><span id="days-label">days until Dec 25</span></div>
-      <div class="whoami" id="whoami"></div>
+<div id="app-root" hidden>
+  <header class="navbar" id="app-navbar">
+    <div class="navbar-inner">
+      <div class="navbar-leading">
+        <button class="back-btn" id="back-home" type="button" aria-label="Back to Your Lists">
+          <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+      </div>
+      <span class="navbar-title" id="title-inline">Gift list</span>
+      <div class="navbar-trailing">
+        <span class="days-badge" aria-live="polite"><b id="days">-</b> <span id="days-label">days</span></span>
+        <div class="whoami" id="whoami"></div>
+      </div>
     </div>
   </header>
 
-  <div id="banner"></div>
+  <main class="wrap">
+    <div class="large-title-block" id="app-large-title">
+      <h1 class="large-title" id="title">Gift list</h1>
+      <p class="large-subtitle">Shared gift ideas and purchases. Changes show up for everyone as they happen.</p>
+    </div>
 
-  <form class="quick" id="quick" hidden>
-    <input id="q-link" type="text" placeholder="Paste a product link or type an idea" aria-label="Paste a product link or type an idea" autocomplete="off">
-    <select id="q-person" aria-label="Who is it for"></select>
-    <button class="btn primary" type="submit">Add idea</button>
-  </form>
+    <div id="banner"></div>
 
-  <section class="stats" id="stats" aria-label="Summary"></section>
+    <form class="quick" id="quick" hidden>
+      <input id="q-link" type="text" placeholder="Paste a product link or type an idea" aria-label="Paste a product link or type an idea" autocomplete="off">
+      <select id="q-person" aria-label="Who is it for"></select>
+      <button class="btn filled" type="submit">Add</button>
+    </form>
 
-  <div class="bar">
-    <div class="chips" id="chips" role="group" aria-label="Filter by status"></div>
-    <select class="person-filter" id="person-filter" aria-label="Filter by person"></select>
-    <input class="search" id="search" type="search" placeholder="Search gifts or people" aria-label="Search gifts or people">
-    <span class="spacer"></span>
-    <button class="btn" id="invite" type="button">Invite</button>
-    <button class="btn" id="show-activity" type="button">Activity</button>
-    <button class="btn" id="add-person" type="button">Add person</button>
-    <button class="btn primary" id="add-gift" type="button">Add gift</button>
-  </div>
+    <section class="stats" id="stats" aria-label="Summary"></section>
 
-  <main id="app"><div class="blank">Loading your list...</div></main>
+    <div class="bar">
+      <div class="chips" id="chips" role="group" aria-label="Filter by status"></div>
+      <select class="person-filter" id="person-filter" aria-label="Filter by person"></select>
+    </div>
+    <div class="bar">
+      <input class="search" id="search" type="search" placeholder="Search gifts or people" aria-label="Search gifts or people">
+      <span class="spacer"></span>
+      <button class="icon-btn" id="invite" type="button" aria-label="Invite">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+      </button>
+      <button class="icon-btn" id="show-activity" type="button" aria-label="Activity">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+      </button>
+      <button class="btn" id="add-person" type="button">Add Person</button>
+      <button class="btn filled" id="add-gift" type="button">Add Gift</button>
+    </div>
+
+    <main id="app"><div class="blank">Loading your list…</div></main>
+  </main>
 </div>
 
 <div id="overlay" class="overlay" hidden></div>
@@ -319,6 +400,15 @@ const dbase = getFirestore(app);
     }
     return e;
   }
+  function svg(pathData, viewBox) {
+    var s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    s.setAttribute("class", "svg-icon"); s.setAttribute("viewBox", viewBox || "0 0 24 24");
+    var p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    p.setAttribute("d", pathData); s.appendChild(p);
+    return s;
+  }
+  var ICON_CHEVRON_RIGHT = "M9 18l6-6-6-6";
+
   var fmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
   var fmt2 = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
   function money(n) { return n % 1 === 0 ? fmt.format(n) : fmt2.format(n); }
@@ -395,9 +485,23 @@ const dbase = getFirestore(app);
     var xmas = new Date(y, 11, 25);
     if (now > new Date(y, 11, 26)) { y += 1; xmas = new Date(y, 11, 25); }
     var days = Math.ceil((xmas - now) / 864e5);
-    $("#days").textContent = days <= 0 ? "Today" : String(days);
-    $("#days-label").textContent = days <= 0 ? "Merry Christmas" : (days === 1 ? "day until Dec 25" : "days until Dec 25");
+    $("#days").textContent = days <= 0 ? "🎄" : String(days);
+    $("#days-label").textContent = days <= 0 ? "Merry Christmas" : (days === 1 ? "day left" : "days left");
   })();
+
+  /* navigation-bar large-title collapse, iOS UINavigationBar-style */
+  function bindCollapse(navbarSel, largeTitleSel) {
+    var navbar = $(navbarSel), sentinel = $(largeTitleSel);
+    if (!navbar || !sentinel) return;
+    function onScroll() {
+      var r = sentinel.getBoundingClientRect();
+      navbar.classList.toggle("is-collapsed", r.bottom <= (navbar.offsetHeight || 44));
+    }
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+  }
+  bindCollapse("#home-navbar", "#home-large-title");
+  bindCollapse("#app-navbar", "#app-large-title");
 
   function personGifts(pid) { return state.gifts.filter(function (g) { return g.personId === pid; }); }
   function sortedPeople() {
@@ -464,7 +568,7 @@ const dbase = getFirestore(app);
       });
     });
     var confirmDel = false;
-    var del = editing ? h("button", { class: "btn danger", type: "button", text: "Delete", onclick: function (e) {
+    var del = editing ? h("button", { class: "btn danger plain", type: "button", text: "Delete", onclick: function (e) {
       if (!confirmDel) { confirmDel = true; e.target.textContent = "Tap again to delete"; return; }
       var snapshot = Object.assign({}, gift), gid = gift.id;
       guard(deleteDoc(giftDoc(gid))).then(function (ok) {
@@ -497,7 +601,7 @@ const dbase = getFirestore(app);
       });
       closeModal();
     } },
-      h("h3", { text: editing ? "Edit gift" : "Add gift" }),
+      h("h3", { text: editing ? "Edit Gift" : "Add Gift" }),
       thumbPreview,
       field("g-person", "For", sel),
       field("g-title", "Gift", title),
@@ -505,7 +609,7 @@ const dbase = getFirestore(app);
       field("g-url", "Link", url),
       field("g-notes", "Notes", notes),
       h("div", { class: "actions" },
-        h("button", { class: "btn primary", type: "submit", text: editing ? "Save" : "Add gift" }),
+        h("button", { class: "btn filled", type: "submit", text: editing ? "Save" : "Add Gift" }),
         h("button", { class: "btn", type: "button", text: "Cancel", onclick: closeModal }),
         h("span", { class: "spacer" }), del));
     openModal(form, "g-title");
@@ -519,7 +623,7 @@ const dbase = getFirestore(app);
     var budget = h("input", { id: "p-budget", type: "number", min: "0", step: "1", inputmode: "decimal", placeholder: "Optional", value: person.budget != null ? person.budget : "" });
     var prefs = h("textarea", { id: "p-notes", maxlength: "300", placeholder: "Sizes, favorite colors, allergies, wish-list notes..." }, person.notes || "");
     var confirmDel = false;
-    var del = editing ? h("button", { class: "btn danger", type: "button", text: "Delete person", onclick: function (e) {
+    var del = editing ? h("button", { class: "btn danger plain", type: "button", text: "Delete Person", onclick: function (e) {
       if (!confirmDel) { confirmDel = true; var n = personGifts(person.id).length; e.target.textContent = n ? "Tap again to delete with " + n + " gift" + (n > 1 ? "s" : "") : "Tap again to delete"; return; }
       var pid = person.id, personSnap = Object.assign({}, person);
       var giftsSnap = personGifts(pid).map(function (g) { return Object.assign({}, g); });
@@ -548,12 +652,12 @@ const dbase = getFirestore(app);
       });
       closeModal();
     } },
-      h("h3", { text: editing ? "Edit person" : "Add person" }),
+      h("h3", { text: editing ? "Edit Person" : "Add Person" }),
       field("p-name", "Name", name),
       h("div", { class: "row2" }, field("p-group", "Group", grp), field("p-budget", "Budget (USD)", budget)),
       field("p-notes", "Gift preferences (optional)", prefs),
       h("div", { class: "actions" },
-        h("button", { class: "btn primary", type: "submit", text: editing ? "Save" : "Add person" }),
+        h("button", { class: "btn filled", type: "submit", text: editing ? "Save" : "Add Person" }),
         h("button", { class: "btn", type: "button", text: "Cancel", onclick: closeModal }),
         h("span", { class: "spacer" }), del));
     openModal(form, "p-name");
@@ -581,50 +685,44 @@ const dbase = getFirestore(app);
     });
   }
 
-  function giftRow(g, mine) {
+  function giftRow(g) {
     var meta = [];
-    if (!mine) {
-      var addedBits = [];
-      if (g.addedBy) addedBits.push("by " + g.addedBy);
-      if (g.createdAt) addedBits.push(shortDate(g.createdAt));
-      if (addedBits.length) meta.push("Added " + addedBits.join(" · "));
-      if (g.status !== "idea" && g.boughtBy) meta.push("Bought by " + g.boughtBy);
-    }
+    var addedBits = [];
+    if (g.addedBy) addedBits.push("by " + g.addedBy);
+    if (g.createdAt) addedBits.push(shortDate(g.createdAt));
+    if (addedBits.length) meta.push("Added " + addedBits.join(" · "));
+    if (g.status !== "idea" && g.boughtBy) meta.push("Bought by " + g.boughtBy);
     var url = safeUrl(g.url);
-    var pill;
-    if (mine) {
-      pill = h("span", { class: "pill hidden-status", text: "🎁", title: "Hidden to keep it a surprise" });
-    } else {
-      pill = h("select", { class: "pill status-select", "data-s": g.status || "idea", "aria-label": "Change status for " + (g.title || "this gift") });
-      STATUS.forEach(function (s) {
-        var o = h("option", { value: s, text: LABEL[s] });
-        if (s === (g.status || "idea")) o.selected = true;
-        pill.appendChild(o);
-      });
-      pill.addEventListener("change", function (e) { setStatus(g, e.target.value, pill); });
-    }
+    var pill = h("select", { class: "status-select", "data-s": g.status || "idea", "aria-label": "Change status for " + (g.title || "this gift") });
+    STATUS.forEach(function (s) {
+      var o = h("option", { value: s, text: LABEL[s] });
+      if (s === (g.status || "idea")) o.selected = true;
+      pill.appendChild(o);
+    });
+    pill.addEventListener("change", function (e) { setStatus(g, e.target.value, pill); });
     var thumb = g.imageUrl ? h("img", { class: "g-thumb", src: g.imageUrl, alt: "", loading: "lazy", onerror: function (e) { e.target.style.display = "none"; } }) : null;
+    var editBtn = h("button", { class: "icon-btn", type: "button", "aria-label": "Edit " + (g.title || "gift"), onclick: function () { giftModal(g); } });
+    editBtn.appendChild(svg(ICON_CHEVRON_RIGHT));
     return h("li", { class: "gift" },
       h("div", { class: "g-main" }, h("div", { class: "g-line" }, thumb,
-        h("div", {},
+        h("div", { style: "min-width:0;" },
           h("div", { class: "g-title", title: g.title || "" }, url ? h("a", { href: url, target: "_blank", rel: "noopener noreferrer", text: truncate(g.title, 35) }) : truncate(g.title, 35)),
           g.notes ? h("div", { class: "g-note", text: g.notes }) : null,
           meta.length ? h("div", { class: "g-meta", text: meta.join(" · ") }) : null))),
       h("div", { class: "g-side" },
+        g.price != null ? h("span", { class: "g-price", text: money(g.price) }) : null,
         pill,
-        !mine && g.price != null ? h("span", { class: "g-price", text: money(g.price) }) : null,
-        h("button", { class: "btn link", type: "button", text: "Edit", onclick: function () { giftModal(g); } })));
+        editBtn));
   }
 
   function unsortedCard(gifts) {
-    var head = h("div", { class: "p-head" },
-      h("div", { class: "p-title" }, h("h2", { text: "Unsorted ideas" }), h("span", { class: "group", text: "From the share sheet" })));
-    var card = h("article", { class: "person" }, head);
+    var card = h("article", { class: "person" },
+      h("div", { class: "p-head" }, h("div", { class: "p-title" }, h("h2", { text: "Unsorted Ideas" }))));
     var ul = h("ul", { class: "gifts" });
-    gifts.forEach(function (g) { ul.appendChild(giftRow(g, false)); });
+    gifts.forEach(function (g) { ul.appendChild(giftRow(g)); });
     card.appendChild(ul);
     card.appendChild(h("div", { class: "p-foot" },
-      h("span", { class: "btn link", text: "Tap Edit on an idea to assign it to someone" }),
+      h("span", { class: "btn plain", style: "color:var(--label-2); cursor:default;", text: "Tap a gift to assign it to someone" }),
       h("span")));
     return card;
   }
@@ -633,35 +731,34 @@ const dbase = getFirestore(app);
     var mine = !!(p.ownerUid && p.ownerUid === state.uid);
     var spent = spentFor(p.id), planned = personGifts(p.id).reduce(function (s, g) { return s + (g.status === "idea" && g.price ? g.price : 0); }, 0);
     var head = h("div", { class: "p-head" },
-      h("div", { class: "p-title" }, h("h2", { text: p.name }), h("span", { class: "group", text: p.group || "" })));
+      h("div", { class: "p-title" }, h("h2", { text: p.name })));
     if (p.notes) head.appendChild(h("div", { class: "prefs", text: p.notes }));
-    if (!mine && p.budget) {
+    if (p.budget) {
       var pct = Math.min(100, Math.round(spent / p.budget * 100)), over = spent > p.budget;
       head.appendChild(h("div", { class: "budget" },
         h("div", {}, money(spent) + " of " + money(p.budget) + " spent", over ? h("span", { class: "over-text", text: " · " + money(spent - p.budget) + " over" }) : null, planned ? " · " + money(planned) + " in ideas" : ""),
         h("div", { class: "meter" + (over ? " over" : ""), role: "img", "aria-label": pct + " percent of budget spent" }, h("i", { style: "width:" + pct + "%" }))));
-    } else if (!mine && (spent || planned)) {
+    } else if (spent || planned) {
       head.appendChild(h("div", { class: "budget" }, money(spent) + " spent" + (planned ? " · " + money(planned) + " in ideas" : "")));
     }
     var card = h("article", { class: "person" }, head);
-    if (mine) card.appendChild(h("div", { class: "surprise-banner", text: "🎁 This is your list — status, price and who's buying are hidden so it stays a surprise." }));
     if (gifts.length) {
       var ul = h("ul", { class: "gifts" });
-      gifts.forEach(function (g) { ul.appendChild(giftRow(g, mine)); });
+      gifts.forEach(function (g) { ul.appendChild(giftRow(g)); });
       card.appendChild(ul);
     } else card.appendChild(h("div", { class: "empty", text: personGifts(p.id).length ? "No gifts match this filter." : "No ideas yet — add one, or forward a link from Safari with the WrapSheet Shortcut." }));
     card.appendChild(h("div", { class: "p-foot" },
-      h("button", { class: "btn", type: "button", text: "Add gift", onclick: function () { giftModal(null, p.id); } }),
-      h("button", { class: "btn link", type: "button", text: "Edit person", onclick: function () { personModal(p); } })));
+      h("button", { class: "btn plain", type: "button", text: "Add Gift", onclick: function () { giftModal(null, p.id); } }),
+      h("button", { class: "btn plain", type: "button", text: "Edit Person", onclick: function () { personModal(p); } })));
     var ownerRow = h("div", { class: "owner-row" });
     if (mine) {
       ownerRow.appendChild(h("span", { class: "owner-badge", text: "This is you" }));
-      ownerRow.appendChild(h("button", { class: "btn link", type: "button", text: "Not you? Unlink", onclick: function () {
+      ownerRow.appendChild(h("button", { class: "btn plain", type: "button", text: "Not you? Unlink", onclick: function () {
         guard(updateDoc(personDoc(p.id), { ownerUid: null, ownerName: null }), "Unlinked");
       } }));
     } else if (!p.ownerUid) {
-      ownerRow.appendChild(h("button", { class: "btn link", type: "button", text: "This is me", onclick: function () {
-        guard(updateDoc(personDoc(p.id), { ownerUid: state.uid, ownerName: state.name }), "Linked — your list will be kept a surprise");
+      ownerRow.appendChild(h("button", { class: "btn plain", type: "button", text: "This is me", onclick: function () {
+        guard(updateDoc(personDoc(p.id), { ownerUid: state.uid, ownerName: state.name }), "Linked");
       } }));
     } else {
       ownerRow.appendChild(h("span", { class: "owner-badge", text: (p.ownerName || "Someone") + " is this person" }));
@@ -674,6 +771,7 @@ const dbase = getFirestore(app);
 
   function render() {
     $("#title").textContent = state.boardName || "Gift list";
+    $("#title-inline").textContent = state.boardName || "Gift list";
     var banner = $("#banner"); banner.textContent = "";
     if (state.error) banner.appendChild(h("div", { class: "notice", text: state.error }));
     $("#invite").hidden = !!state.error;
@@ -685,7 +783,7 @@ const dbase = getFirestore(app);
     if (!state.gotP || !state.gotG) { app.appendChild(h("div", { class: "blank", text: "Loading your list..." })); return; }
     var hasUnsorted = state.gifts.some(function (g) { return !g.personId; });
     if (!state.people.length && !hasUnsorted) {
-      app.appendChild(h("div", { class: "blank", text: "No one on the list yet. Tap Add person to start, or forward a product link from Safari with the WrapSheet Shortcut." }));
+      app.appendChild(h("div", { class: "blank", text: "No one on the list yet. Tap Add Person to start, or forward a product link from Safari with the WrapSheet Shortcut." }));
       return;
     }
     var q = state.q.trim().toLowerCase(), filtering = state.filter !== "all" || state.personFilter !== "all" || !!q;
@@ -774,7 +872,7 @@ const dbase = getFirestore(app);
   function activityModal() {
     var list = h("ul", { class: "activity-list" }, h("li", { text: "Loading…" }));
     var form = h("div", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": "Recent activity" },
-      h("h3", { text: "Recent activity" }),
+      h("h3", { text: "Recent Activity" }),
       list,
       h("div", { class: "actions" }, h("button", { class: "btn", type: "button", text: "Close", onclick: closeModal })));
     openModal(form);
@@ -790,10 +888,10 @@ const dbase = getFirestore(app);
   function inviteModal() {
     var link = shareUrl();
     var form = h("div", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": "Invite to this list" },
-      h("h3", { text: "Invite to this list" }),
-      h("p", { style: "color:var(--muted); margin:0;" }, "Anyone with this link can view and edit the list:"),
+      h("h3", { text: "Invite to This List" }),
+      h("p", { style: "color:var(--label-2); margin:0; font:var(--tx-subhead);" }, "Anyone with this link can view and edit the list:"),
       h("div", { class: "notice share" }, h("code", { text: link }),
-        h("button", { class: "btn primary", type: "button", text: "Copy link", onclick: function () {
+        h("button", { class: "btn filled", type: "button", text: "Copy Link", onclick: function () {
           navigator.clipboard.writeText(link).then(function () { toast("Link copied"); }, function () { toast("Couldn't copy — select the link above and copy it manually."); });
         } })),
       h("div", { class: "actions" }, h("button", { class: "btn", type: "button", text: "Close", onclick: closeModal })));
@@ -826,33 +924,35 @@ const dbase = getFirestore(app);
       box.appendChild(h("div", { class: "blank", text: "No lists yet. Create one, or paste an invite link someone sent you." }));
       return;
     }
-    var grid = h("div", { class: "lists" });
+    var wrapDiv = h("div", { class: "lists" });
     homeState.boards.slice().sort(function (a, b) { return (b.joinedAt || 0) - (a.joinedAt || 0); }).forEach(function (b) {
-      var actionsRow = h("div", { style: "display:flex; gap:6px; flex-wrap:wrap;" },
-        h("button", { class: "btn link leave", type: "button", text: "Remove from my lists", onclick: function (e) {
+      var actionsRow = h("div", { class: "list-row-actions" },
+        h("button", { class: "btn plain", type: "button", text: "Remove", onclick: function (e) {
           e.stopPropagation();
           deleteDoc(doc(dbase, "users", state.uid, "boards", b.id)).catch(function (err) { console.error(err); toast("Couldn't remove that."); });
         } }));
       if (b.ownerUid === state.uid) {
-        actionsRow.appendChild(h("button", { class: "btn link", type: "button", text: "Duplicate", onclick: function (e) {
+        actionsRow.appendChild(h("button", { class: "btn plain", type: "button", text: "Duplicate", onclick: function (e) {
           e.stopPropagation();
           if (e.target.disabled) return;
           e.target.disabled = true; e.target.textContent = "Duplicating…";
           duplicateBoard(b, e.target);
         } }));
       }
-      var card = h("div", { class: "list-card", tabindex: "0", role: "button", "aria-label": "Open " + (b.name || "list"), onclick: function () { navigate("/b/" + b.id); }, onkeydown: function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate("/b/" + b.id); } } },
-        h("h3", { text: b.name || "Untitled list" }),
-        h("span", { class: "role", text: b.ownerUid === state.uid ? "You created this" : "Shared with you" }),
-        actionsRow);
-      grid.appendChild(card);
+      var chev = svg(ICON_CHEVRON_RIGHT); chev.setAttribute("class", "chevron");
+      var row = h("button", { class: "list-row", type: "button", "aria-label": "Open " + (b.name || "list"), onclick: function () { navigate("/b/" + b.id); } },
+        h("div", { class: "list-row-main" },
+          h("h3", { text: b.name || "Untitled list" }),
+          h("div", { class: "role", text: b.ownerUid === state.uid ? "You created this" : "Shared with you" })),
+        actionsRow, chev);
+      wrapDiv.appendChild(row);
     });
-    box.appendChild(grid);
+    box.appendChild(wrapDiv);
   }
 
   function createListModal() {
     var name = h("input", { id: "l-name", type: "text", maxlength: "60", placeholder: "Smith Family Christmas" });
-    var createBtn = h("button", { class: "btn primary", type: "submit", text: "Create" });
+    var createBtn = h("button", { class: "btn filled", type: "submit", text: "Create" });
     var form = h("form", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": "Create new list", onsubmit: function (e) {
       e.preventDefault();
       if (createBtn.disabled) return;
@@ -867,7 +967,7 @@ const dbase = getFirestore(app);
         createBtn.disabled = false; createBtn.textContent = "Create";
       });
     } },
-      h("h3", { text: "Create new list" }),
+      h("h3", { text: "Create New List" }),
       field("l-name", "List name", name),
       h("div", { class: "actions" },
         createBtn,
@@ -943,8 +1043,8 @@ const dbase = getFirestore(app);
     $("#home-root").hidden = true; $("#app-root").hidden = false;
     boardId = id;
     $("#whoami").textContent = "";
-    $("#whoami").appendChild(h("span", { text: state.name }));
-    $("#whoami").appendChild(h("button", { class: "btn link", type: "button", text: "Sign out", onclick: function () { signOut(auth); } }));
+    $("#whoami").appendChild(h("span", { class: "whoami-name", text: state.name }));
+    $("#whoami").appendChild(h("button", { class: "btn plain", type: "button", text: "Sign Out", onclick: function () { signOut(auth); } }));
 
     if (unsubP) unsubP(); if (unsubG) unsubG(); if (unsubBoardDoc) unsubBoardDoc();
     function fail(e) { console.error(e); state.error = "The list stopped updating (" + (e && e.code || "error") + "). Reload the page to reconnect."; render(); }
@@ -994,8 +1094,8 @@ const dbase = getFirestore(app);
     try { history.replaceState(null, "", "/"); } catch (e) {}
 
     $("#home-whoami").textContent = "";
-    $("#home-whoami").appendChild(h("span", { text: state.name }));
-    $("#home-whoami").appendChild(h("button", { class: "btn link", type: "button", text: "Sign out", onclick: function () { signOut(auth); } }));
+    $("#home-whoami").appendChild(h("span", { class: "whoami-name", text: state.name }));
+    $("#home-whoami").appendChild(h("button", { class: "btn plain", type: "button", text: "Sign Out", onclick: function () { signOut(auth); } }));
 
     if (unsubMyBoards) unsubMyBoards();
     unsubMyBoards = onSnapshot(collection(dbase, "users", state.uid, "boards"), function (snap) {
