@@ -135,19 +135,19 @@ a { color: var(--tint); }
 /* the large-title block doubles as the brand surface: a navy card with a
    thin gold rule and a faint icon watermark, once per screen */
 .large-title-block {
-  position: relative; overflow: hidden; border-radius: var(--radius-sheet); color: #fff;
-  padding: 22px 20px 20px; margin-top: 6px;
+  position: relative; overflow: hidden; border-radius: var(--radius-card); color: #fff;
+  padding: 14px 16px 13px; margin-top: 2px;
   background: linear-gradient(165deg, var(--brand-navy) 0%, var(--brand-navy-deep) 130%);
   box-shadow: var(--shadow-card);
 }
 .large-title-block::after {
-  content: ""; position: absolute; top: -18px; right: -18px; width: 140px; height: 140px;
-  background: url("/icons/icon-192.png") center / contain no-repeat; opacity: .07; filter: saturate(0) brightness(2);
+  content: ""; position: absolute; top: -14px; right: -14px; width: 84px; height: 84px;
+  background: url("/icons/icon-192.png") center / contain no-repeat; opacity: .06; filter: saturate(0) brightness(2);
   pointer-events: none;
 }
-.large-title-block .rule { width: 32px; height: 3px; background: var(--brand-gold); border-radius: 2px; margin: 0 0 10px; }
-.large-title { font: var(--tx-large-title); letter-spacing: -.02em; margin: 0; color: #fff; }
-.large-subtitle { font: var(--tx-subhead); color: rgba(255,255,255,.68); margin: 4px 0 0; max-width: 42ch; }
+.large-title-block .rule { width: 24px; height: 3px; background: var(--brand-gold); border-radius: 2px; margin: 0 0 6px; }
+.large-title { font: var(--tx-title1); letter-spacing: -.01em; margin: 0; color: #fff; }
+.large-subtitle { font: var(--tx-footnote); color: rgba(255,255,255,.68); margin: 3px 0 0; max-width: 42ch; }
 .large-title-block .btn.plain { color: rgba(255,255,255,.85); }
 /* user menu: a compact avatar in the nav bar, tap to reveal a small
    popover with the signed-in name and Sign Out — replaces an
