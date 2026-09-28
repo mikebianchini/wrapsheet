@@ -114,6 +114,13 @@ a { color: var(--tint); }
 .gate-box img { width: 88px; height: 88px; border-radius: 20px; box-shadow: 0 12px 32px -10px rgba(0,0,0,.6), 0 0 0 1px rgba(226,178,85,.35); }
 .gate-box h1 { font: var(--tx-large-title); letter-spacing: -.02em; margin: 6px 0 0; color: #fff; }
 .gate-box p { color: rgba(255,255,255,.7); margin: 0; font: var(--tx-subhead); }
+.gate-help { margin-top: 4px; padding: 14px; border-radius: var(--radius-card); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); text-align: left; }
+.gate-help p { color: rgba(255,255,255,.82); margin: 0 0 10px; font: var(--tx-footnote); }
+.gate-help .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.gate-help button { border: 0; border-radius: var(--radius-control); padding: 8px 12px; font: var(--tx-footnote); font-weight: 600; cursor: pointer; }
+.gate-help .copy-btn { background: rgba(255,255,255,.16); color: #fff; }
+.gate-help .copy-btn:hover { background: rgba(255,255,255,.24); }
+.gate-help .retry-btn { background: var(--brand-gold); color: var(--brand-navy-deep); }
 .gate-rule { width: 40px; height: 2px; background: var(--brand-gold); border-radius: 2px; margin: 0; }
 .g-btn { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 0; border-radius: var(--radius-control); padding: 12px 20px; font: var(--tx-headline); color: #1C1C1E; cursor: pointer; margin-top: 8px; box-shadow: 0 6px 20px -8px rgba(0,0,0,.5); }
 .g-btn:hover { background: #F3F3F3; }
@@ -328,6 +335,13 @@ a { color: var(--tint); }
       <svg viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.56 2.7-3.87 2.7-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.9v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.67 9c0-.59.1-1.17.28-1.7V4.97H.9A9 9 0 0 0 0 9c0 1.45.35 2.83.9 4.03z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .9 4.97l3.05 2.33C4.66 5.17 6.65 3.58 9 3.58z"/></svg>
       Sign in with Google
     </button>
+    <div class="gate-help" id="gate-help" hidden>
+      <p>Sign-in didn't finish. This usually happens inside an app's built-in browser (like a link opened from Messages) — try opening this page in Safari instead.</p>
+      <div class="actions">
+        <button type="button" class="copy-btn" id="gate-copy">Copy Link</button>
+        <button type="button" class="retry-btn" id="gate-retry">Try Again</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1217,10 +1231,32 @@ const dbase = getFirestore(app);
 })();
 
 /* auth bootstrap */
+// signInWithRedirect is deliberately not used as a fallback here: inside an
+// app's embedded browser (e.g. a link opened from Messages), the redirect
+// round-trip to Google loses its session state and strands the person on a
+// raw Firebase error page ("missing initial state") that they can't get out
+// of. Since an embedded browser is exactly the case that blocks the popup
+// in the first place, treat a blocked/failed popup as "this browser can't
+// sign in here" and tell the person to open the page in Safari instead.
+var gateHelp = document.getElementById("gate-help");
+var gateCopy = document.getElementById("gate-copy");
+var gateRetry = document.getElementById("gate-retry");
+function showGateHelp() { if (gateHelp) gateHelp.hidden = false; }
+if (gateCopy) gateCopy.addEventListener("click", function () {
+  var done = function () { gateCopy.textContent = "Copied!"; setTimeout(function () { gateCopy.textContent = "Copy Link"; }, 2000); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(location.href).then(done, done);
+  else done();
+});
+if (gateRetry) gateRetry.addEventListener("click", function () { document.getElementById("google-in").click(); });
+
 document.getElementById("google-in").addEventListener("click", function () {
+  if (gateHelp) gateHelp.hidden = true;
   signInWithPopup(auth, new GoogleAuthProvider()).catch(function (e) {
-    if (e && (e.code === "auth/popup-blocked" || e.code === "auth/cancelled-popup-request")) {
-      signInWithRedirect(auth, new GoogleAuthProvider());
+    var code = e && e.code;
+    if (code === "auth/popup-blocked" || code === "auth/cancelled-popup-request" || code === "auth/operation-not-supported-in-this-environment" || code === "auth/web-storage-unsupported") {
+      showGateHelp();
+    } else if (code === "auth/popup-closed-by-user") {
+      // they closed it themselves — no error needed
     } else {
       console.error(e);
       alert("Sign-in failed: " + (e && e.message || e));
@@ -1228,7 +1264,7 @@ document.getElementById("google-in").addEventListener("click", function () {
   });
 });
 
-getRedirectResult(auth).catch(function (e) { console.error(e); });
+getRedirectResult(auth).catch(function (e) { console.error(e); showGateHelp(); });
 
 onAuthStateChanged(auth, function (user) {
   var gate = document.getElementById("gate"), home = document.getElementById("home-root"), root = document.getElementById("app-root");
