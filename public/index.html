@@ -159,6 +159,18 @@ a { color: var(--tint); }
 .hero-full .rule { width: 24px; height: 3px; background: var(--brand-gold); border-radius: 2px; margin: 0 0 6px; }
 .large-title { font: var(--tx-title1); letter-spacing: -.01em; margin: 0; color: #fff; }
 .large-subtitle { font: var(--tx-footnote); color: rgba(255,255,255,.68); margin: 3px 0 0; max-width: 42ch; }
+/* total-budget roll-up, sitting in the header itself like the hero's
+   own "event budget" summary — only shown once someone sets a budget */
+.hero-budget { margin-top: 14px; max-width: 420px; }
+.hero-budget-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; gap: 8px; }
+.hb-label { font: 600 11px/1 var(--font); text-transform: uppercase; letter-spacing: .05em; color: rgba(255,255,255,.6); }
+.hb-amount { font: 700 15px/1 var(--font); color: #fff; font-variant-numeric: tabular-nums; }
+.hero-budget-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.18); overflow: hidden; }
+.hero-budget-bar i { display: block; height: 100%; background: var(--brand-gold); border-radius: 3px; }
+.hero-budget-bar i.over { background: #FF6B6B; }
+.hero-budget-caption { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-top: 6px; font: var(--tx-caption1); color: rgba(255,255,255,.65); font-variant-numeric: tabular-nums; }
+.hero-budget-status { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; color: rgba(255,255,255,.9); white-space: nowrap; }
+.hero-budget-status.over { color: #FFB3B3; }
 /* user menu: a compact avatar in the nav bar, tap to reveal a small
    popover with the signed-in name and Sign Out — replaces an
    always-visible name + text button with a native-feeling control */
@@ -233,10 +245,18 @@ a { color: var(--tint); }
 .p-avatar { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-navy); color: var(--brand-gold); font: 700 13px/1 var(--font); }
 .prefs { color: var(--label-2); font: var(--tx-footnote); overflow-wrap: anywhere; }
 .budget { display: flex; flex-direction: column; gap: 5px; font: var(--tx-footnote); color: var(--label-2); font-variant-numeric: tabular-nums; margin-top: 2px; }
-.meter { height: 4px; border-radius: 2px; background: var(--fill); overflow: hidden; }
-.meter i { display: block; height: 100%; background: var(--green); border-radius: 2px; }
-.meter.over i { background: var(--red); }
-.over-text { color: var(--red); font-weight: 600; }
+/* two-tone budget bar: a filled (spent) segment against a plain track,
+   plus a caption row with a status dot — clearer at a glance than a
+   single thin meter with text stacked above it */
+.budget2 { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.budget2-bar { height: 6px; border-radius: 3px; background: var(--fill); overflow: hidden; }
+.budget2-bar i { display: block; height: 100%; background: var(--brand-navy); border-radius: 3px; }
+.budget2-bar i.over { background: var(--red); }
+@media (prefers-color-scheme: dark) { .budget2-bar i { background: var(--brand-gold); } }
+.budget2-caption { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font: var(--tx-caption1); color: var(--label-2); font-variant-numeric: tabular-nums; }
+.budget2-status { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; color: var(--green); white-space: nowrap; }
+.budget2-status.over { color: var(--red); }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
 
 .gifts { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--separator); }
 .gift { padding: 10px 14px; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; border-bottom: 1px solid var(--separator); }
@@ -394,6 +414,14 @@ a { color: var(--tint); }
       <div class="rule" aria-hidden="true"></div>
       <h1 class="large-title" id="title">Gift list</h1>
       <p class="large-subtitle">Shared gift ideas and purchases. Changes show up for everyone as they happen.</p>
+      <div class="hero-budget" id="hero-budget" hidden>
+        <div class="hero-budget-row"><span class="hb-label">Total Budget</span><span class="hb-amount" id="hb-amount"></span></div>
+        <div class="hero-budget-bar"><i id="hb-fill"></i></div>
+        <div class="hero-budget-caption">
+          <span id="hb-caption"></span>
+          <span class="hero-budget-status" id="hb-status"><span class="status-dot"></span><span id="hb-status-text"></span></span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -793,6 +821,22 @@ const dbase = getFirestore(app);
     box.appendChild(stat("Spent", money(spent), budget ? " of " + money(budget) : ""));
   }
 
+  /* board-level "total budget" roll-up in the hero — mirrors the
+     per-person bar, only shown once someone has set a budget */
+  function renderHeroBudget() {
+    var box = $("#hero-budget"); if (!box) return;
+    var budget = state.people.reduce(function (s, p) { return s + (p.budget || 0); }, 0);
+    if (!budget) { box.hidden = true; return; }
+    var spent = state.gifts.reduce(function (s, g) { return s + (g.status !== "idea" && g.price ? g.price : 0); }, 0);
+    var pct = Math.min(100, Math.round(spent / budget * 100)), over = spent > budget;
+    box.hidden = false;
+    $("#hb-amount").textContent = money(budget);
+    var fill = $("#hb-fill"); fill.className = over ? "over" : ""; fill.style.width = pct + "%";
+    $("#hb-caption").textContent = money(spent) + " spent";
+    var statusEl = $("#hb-status"); statusEl.className = "hero-budget-status" + (over ? " over" : "");
+    $("#hb-status-text").textContent = over ? money(spent - budget) + " over" : money(Math.max(budget - spent, 0)) + " to spend";
+  }
+
   function renderChips() {
     var box = $("#chips"); box.textContent = "";
     [["all", "All"], ["idea", "Ideas"], ["bought", "Bought"], ["wrapped", "Wrapped"]].forEach(function (c) {
@@ -851,9 +895,13 @@ const dbase = getFirestore(app);
     if (p.notes) head.appendChild(h("div", { class: "prefs", text: p.notes }));
     if (p.budget) {
       var pct = Math.min(100, Math.round(spent / p.budget * 100)), over = spent > p.budget;
-      head.appendChild(h("div", { class: "budget" },
-        h("div", {}, money(spent) + " of " + money(p.budget) + " spent", over ? h("span", { class: "over-text", text: " · " + money(spent - p.budget) + " over" }) : null, planned ? " · " + money(planned) + " in ideas" : ""),
-        h("div", { class: "meter" + (over ? " over" : ""), role: "img", "aria-label": pct + " percent of budget spent" }, h("i", { style: "width:" + pct + "%" }))));
+      var leftCaption = money(spent) + " spent" + (planned ? " · " + money(planned) + " in ideas" : "");
+      var statusText = over ? money(spent - p.budget) + " over" : money(Math.max(p.budget - spent, 0)) + " to spend";
+      head.appendChild(h("div", { class: "budget2" },
+        h("div", { class: "budget2-bar", role: "img", "aria-label": pct + " percent of " + p.name + "'s budget spent" }, h("i", { class: over ? "over" : "", style: "width:" + pct + "%" })),
+        h("div", { class: "budget2-caption" },
+          h("span", { text: leftCaption }),
+          h("span", { class: "budget2-status" + (over ? " over" : "") }, h("span", { class: "status-dot" }), statusText))));
     } else if (spent || planned) {
       head.appendChild(h("div", { class: "budget" }, money(spent) + " spent" + (planned ? " · " + money(planned) + " in ideas" : "")));
     }
@@ -893,7 +941,7 @@ const dbase = getFirestore(app);
     $("#invite").hidden = !!state.error;
     $("#quick").hidden = !!state.error;
     fillQuickPeople(); fillPersonFilter();
-    renderStats(); renderChips();
+    renderStats(); renderHeroBudget(); renderChips();
     var app = $("#app"); app.textContent = "";
     if (state.error) return;
     if (!state.gotP || !state.gotG) { app.appendChild(h("div", { class: "blank", text: "Loading your list..." })); return; }
