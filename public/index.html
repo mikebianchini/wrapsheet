@@ -149,9 +149,24 @@ a { color: var(--tint); }
 .large-title { font: var(--tx-large-title); letter-spacing: -.02em; margin: 0; color: #fff; }
 .large-subtitle { font: var(--tx-subhead); color: rgba(255,255,255,.68); margin: 4px 0 0; max-width: 42ch; }
 .large-title-block .btn.plain { color: rgba(255,255,255,.85); }
-.whoami { display: flex; align-items: center; gap: 8px; }
-.whoami img { width: 26px; height: 26px; border-radius: 50%; }
-.whoami-name { font: var(--tx-footnote); color: var(--label-2); max-width: 11ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* user menu: a compact avatar in the nav bar, tap to reveal a small
+   popover with the signed-in name and Sign Out — replaces an
+   always-visible name + text button with a native-feeling control */
+.user-menu { position: relative; }
+.user-avatar-btn { border: 0; background: transparent; padding: 0; cursor: pointer; display: block; border-radius: 50%; }
+.user-avatar { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; overflow: hidden; background: var(--brand-navy); color: var(--brand-gold); font: 700 12px/1 var(--font); }
+.user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.user-avatar-btn:hover .user-avatar { box-shadow: 0 0 0 2px var(--fill-2); }
+.user-avatar-btn[aria-expanded="true"] .user-avatar { box-shadow: 0 0 0 2px var(--tint-bg), 0 0 0 3px var(--tint); }
+.user-menu-panel {
+  position: absolute; top: calc(100% + 8px); right: 0; min-width: 190px; z-index: 35;
+  background: var(--bg-elevated); border-radius: var(--radius-card); box-shadow: var(--shadow-sheet);
+  padding: 6px; display: flex; flex-direction: column; gap: 2px;
+}
+.user-menu-name { padding: 8px 10px 6px; font: var(--tx-footnote); font-weight: 600; color: var(--label); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.user-menu-item { border: 0; background: transparent; text-align: left; padding: 8px 10px; border-radius: 8px; font: var(--tx-subhead); color: var(--label); cursor: pointer; }
+.user-menu-item:hover { background: var(--fill-2); }
+.user-menu-item.danger { color: var(--red); }
 .days-badge { display: inline-flex; align-items: baseline; gap: 3px; background: var(--brand-navy); color: var(--brand-gold); border-radius: 999px; padding: 4px 10px; font: var(--tx-caption2); letter-spacing: 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .days-badge b { font: 700 13px/1 var(--font); }
 @media (prefers-color-scheme: dark) { .days-badge { background: var(--brand-gold); color: var(--brand-navy-deep); } }
@@ -586,6 +601,39 @@ const dbase = getFirestore(app);
     var f = focusId && document.getElementById(focusId); if (f) f.focus();
   }
   function field(id, label, control) { return h("div", { class: "field" }, h("label", { for: id, text: label }), control); }
+
+  /* compact avatar in the nav bar, opens a small popover with the
+     signed-in name and Sign Out — one implementation shared by the
+     Home and Board nav bars */
+  var closeUserMenu = null;
+  function renderUserMenu(container) {
+    container.textContent = "";
+    var initial = (String(state.name || "?").trim().charAt(0) || "?").toUpperCase();
+    var avatar = h("span", { class: "user-avatar" }, state.photoURL ? h("img", { src: state.photoURL, alt: "", referrerpolicy: "no-referrer" }) : initial);
+    var btn = h("button", { class: "user-avatar-btn", type: "button", "aria-haspopup": "true", "aria-expanded": "false", "aria-label": "Account: " + state.name }, avatar);
+    var wrap = h("div", { class: "user-menu" }, btn);
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (closeUserMenu) { closeUserMenu(); return; }
+      var panel = h("div", { class: "user-menu-panel", role: "menu" },
+        h("div", { class: "user-menu-name", text: state.name }),
+        h("button", { class: "user-menu-item danger", type: "button", role: "menuitem", text: "Sign Out", onclick: function () { signOut(auth); } }));
+      wrap.appendChild(panel);
+      btn.setAttribute("aria-expanded", "true");
+      function close() {
+        if (panel.parentNode) panel.parentNode.removeChild(panel);
+        btn.setAttribute("aria-expanded", "false");
+        document.removeEventListener("click", onDocClick);
+        document.removeEventListener("keydown", onKey);
+        closeUserMenu = null;
+      }
+      function onDocClick() { close(); }
+      function onKey(ev) { if (ev.key === "Escape") close(); }
+      setTimeout(function () { document.addEventListener("click", onDocClick); document.addEventListener("keydown", onKey); }, 0);
+      closeUserMenu = close;
+    });
+    container.appendChild(wrap);
+  }
 
   function giftModal(gift, presetPerson) {
     var editing = !!gift; gift = gift || {};
@@ -1088,9 +1136,7 @@ const dbase = getFirestore(app);
     teardownHome();
     $("#home-root").hidden = true; $("#app-root").hidden = false;
     boardId = id;
-    $("#whoami").textContent = "";
-    $("#whoami").appendChild(h("span", { class: "whoami-name", text: state.name }));
-    $("#whoami").appendChild(h("button", { class: "btn plain", type: "button", text: "Sign Out", onclick: function () { signOut(auth); } }));
+    renderUserMenu($("#whoami"));
 
     if (unsubP) unsubP(); if (unsubG) unsubG(); if (unsubBoardDoc) unsubBoardDoc();
     function fail(e) { console.error(e); state.error = "The list stopped updating (" + (e && e.code || "error") + "). Reload the page to reconnect."; render(); }
@@ -1139,9 +1185,7 @@ const dbase = getFirestore(app);
     $("#app-root").hidden = true; $("#home-root").hidden = false;
     try { history.replaceState(null, "", "/"); } catch (e) {}
 
-    $("#home-whoami").textContent = "";
-    $("#home-whoami").appendChild(h("span", { class: "whoami-name", text: state.name }));
-    $("#home-whoami").appendChild(h("button", { class: "btn plain", type: "button", text: "Sign Out", onclick: function () { signOut(auth); } }));
+    renderUserMenu($("#home-whoami"));
 
     if (unsubMyBoards) unsubMyBoards();
     unsubMyBoards = onSnapshot(collection(dbase, "users", state.uid, "boards"), function (snap) {
@@ -1160,6 +1204,7 @@ const dbase = getFirestore(app);
   window.__gl = { route: route, setUser: function (user) {
     state.uid = user.uid;
     state.name = user.displayName || (user.email ? user.email.split("@")[0] : "you");
+    state.photoURL = user.photoURL || null;
   } };
 })();
 
