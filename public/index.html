@@ -222,7 +222,8 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 .stats { display: flex; background: var(--bg-elevated); border-radius: var(--radius-card); box-shadow: var(--shadow-card); overflow: hidden; }
 .stat { flex: 1 1 0; padding: 10px 8px; display: flex; flex-direction: column; align-items: center; gap: 1px; border-inline-start: 1px solid var(--separator); }
 .stat:first-child { border-inline-start: 0; }
-.stat .k { font: var(--tx-caption1); text-transform: uppercase; letter-spacing: .03em; color: var(--label-2); }
+.stat .k { display: inline-flex; align-items: center; gap: 4px; font: var(--tx-caption1); text-transform: uppercase; letter-spacing: .03em; color: var(--label-2); }
+.stat .k svg { width: 12px; height: 12px; flex: none; }
 .stat .v { font: 600 19px/1.2 var(--font); letter-spacing: -.01em; font-variant-numeric: tabular-nums; color: var(--label); }
 .stat .v small { font: 400 11px var(--font); color: var(--label-2); }
 
@@ -244,6 +245,7 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 /* status-grouped accordion sections (Gifts tab) */
 .accordion-section { background: var(--bg-elevated); border-radius: var(--radius-card); overflow: hidden; box-shadow: var(--shadow-card); }
 .accordion-header { width: 100%; display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: transparent; border: 0; cursor: pointer; font: var(--tx-title3); color: var(--label); text-align: left; }
+.accordion-header .acc-icon { flex: none; width: 18px; height: 18px; color: var(--tint); }
 .accordion-header .acc-count { font: var(--tx-footnote); font-weight: 600; color: var(--label-2); }
 .accordion-header .acc-chevron { margin-left: auto; color: var(--label-2); flex: none; width: 16px; height: 16px; transition: transform .15s var(--ease); transform: rotate(90deg); }
 .accordion-header[aria-expanded="false"] .acc-chevron { transform: rotate(0deg); }
@@ -276,6 +278,8 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 .gift:last-child { border-bottom: 0; }
 .g-line { display: flex; gap: 10px; align-items: center; min-width: 0; }
 .g-thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: var(--bg-elevated-2); flex: none; }
+.g-thumb-fallback { width: 44px; height: 44px; border-radius: 8px; background: var(--bg-elevated-2); flex: none; display: grid; place-items: center; color: var(--label-3); }
+.g-thumb-fallback svg { width: 20px; height: 20px; }
 .g-main { min-width: 0; }
 .g-title { font: var(--tx-body); overflow-wrap: anywhere; color: var(--label); }
 .g-title-btn { display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; text-decoration-color: var(--label-3); text-underline-offset: 3px; }
@@ -540,6 +544,11 @@ const dbase = getFirestore(app);
     return s;
   }
   var ICON_CHEVRON_RIGHT = "M9 18l6-6-6-6";
+  var ICON_IDEA = "M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z";
+  var ICON_BAG = "M6 8h12l-1.2 12.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8zM9 8V6a3 3 0 0 1 6 0v2";
+  var ICON_GIFT = "M4 9h16v4H4zM6 13h12v8H6zM12 9v12M8 9a2.2 2.2 0 1 1 4-1.3A2.2 2.2 0 1 1 16 9";
+  var ICON_DOLLAR = "M12 2v20M16.5 6.5C16.5 5 14.8 4 12.5 4S8.5 5 8.5 6.8c0 3.6 8 1.8 8 5.6 0 2-2 3.1-4.5 3.1S7 14.4 7 12.8";
+  var STATUS_ICON = { idea: ICON_IDEA, bought: ICON_BAG, wrapped: ICON_GIFT };
 
   var fmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
   var fmt2 = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -835,12 +844,12 @@ const dbase = getFirestore(app);
       if (x.status !== "idea" && x.price) spent += x.price;
     });
     var budget = state.people.reduce(function (s, p) { return s + (p.budget || 0); }, 0);
-    function stat(k, v, small) { return h("div", { class: "stat" }, h("span", { class: "k", text: k }), h("span", { class: "v" }, String(v), small ? h("small", { text: small }) : null)); }
+    function stat(icon, k, v, small) { return h("div", { class: "stat" }, h("span", { class: "k" }, svg(icon), k), h("span", { class: "v" }, String(v), small ? h("small", { text: small }) : null)); }
     var box = $("#stats"); box.textContent = "";
-    box.appendChild(stat("Ideas", ideas));
-    box.appendChild(stat("Bought", bought));
-    box.appendChild(stat("Wrapped", wrapped));
-    box.appendChild(stat("Spent", money(spent), budget ? " of " + money(budget) : ""));
+    box.appendChild(stat(ICON_IDEA, "Ideas", ideas));
+    box.appendChild(stat(ICON_BAG, "Bought", bought));
+    box.appendChild(stat(ICON_GIFT, "Wrapped", wrapped));
+    box.appendChild(stat(ICON_DOLLAR, "Spent", money(spent), budget ? " of " + money(budget) : ""));
   }
 
   /* board-level "total budget" roll-up in the hero — mirrors the
@@ -893,7 +902,10 @@ const dbase = getFirestore(app);
       var section = h("article", { class: "accordion-section" });
       var chevron = svg(ICON_CHEVRON_RIGHT);
       chevron.setAttribute("class", "svg-icon acc-chevron");
+      var statusIcon = svg(STATUS_ICON[s]);
+      statusIcon.setAttribute("class", "svg-icon acc-icon");
       var header = h("button", { class: "accordion-header", type: "button", "aria-expanded": String(expanded) },
+        statusIcon,
         h("span", { text: PLURAL_LABEL[s] }),
         h("span", { class: "acc-count", text: String(list.length) }),
         chevron);
@@ -930,7 +942,10 @@ const dbase = getFirestore(app);
       pill.appendChild(o);
     });
     pill.addEventListener("change", function (e) { setStatus(g, e.target.value, pill); });
-    var thumb = g.imageUrl ? h("img", { class: "g-thumb", src: g.imageUrl, alt: "", loading: "lazy", onerror: function (e) { e.target.style.display = "none"; } }) : null;
+    function fallbackThumb() { var f = h("span", { class: "g-thumb-fallback", "aria-hidden": "true" }); f.appendChild(svg(ICON_GIFT)); return f; }
+    var thumb = g.imageUrl
+      ? h("img", { class: "g-thumb", src: g.imageUrl, alt: "", loading: "lazy", onerror: function (e) { e.target.replaceWith(fallbackThumb()); } })
+      : fallbackThumb();
     var editBtn = h("button", { class: "icon-btn", type: "button", "aria-label": "Edit " + (g.title || "gift"), onclick: function () { giftModal(g); } });
     editBtn.appendChild(svg(ICON_CHEVRON_RIGHT));
     return h("li", { class: "gift" },
