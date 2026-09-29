@@ -418,7 +418,6 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
           <img src="/icons/icon-48.png" alt=""><span>WrapSheet</span>
         </button>
       </div>
-      <span class="navbar-title" id="title-inline">Gift list</span>
       <div class="navbar-trailing">
         <span class="days-badge" aria-live="polite"><b id="days">-</b> <span id="days-label">days</span></span>
         <button class="nav-new-btn" id="board-new-list" type="button" aria-label="Create a new list">
@@ -992,7 +991,6 @@ const dbase = getFirestore(app);
 
   function render() {
     $("#title").textContent = state.boardName || "Gift list";
-    $("#title-inline").textContent = state.boardName || "Gift list";
     var banner = $("#banner"); banner.textContent = "";
     if (state.error) banner.appendChild(h("div", { class: "notice", text: state.error }));
     $("#invite").hidden = !!state.error;
