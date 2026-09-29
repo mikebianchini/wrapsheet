@@ -429,6 +429,19 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
   <main class="wrap">
     <div id="banner"></div>
 
+    <div class="bar">
+      <input class="search" id="search" type="search" placeholder="Search gifts or people" aria-label="Search gifts or people">
+      <span class="spacer"></span>
+      <button class="icon-btn" id="invite" type="button" aria-label="Invite">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+      </button>
+      <button class="icon-btn" id="show-activity" type="button" aria-label="Activity">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+      </button>
+      <button class="btn" id="add-person" type="button">Add Person</button>
+      <button class="btn filled" id="add-gift" type="button">Add Gift</button>
+    </div>
+
     <form class="quick" id="quick" hidden>
       <input id="q-link" type="text" placeholder="Paste a product link or type an idea" aria-label="Paste a product link or type an idea" autocomplete="off">
       <select id="q-person" aria-label="Who is it for"></select>
@@ -442,18 +455,6 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
     <div class="bar">
       <div class="chips" id="chips" role="group" aria-label="Filter by status"></div>
       <select class="person-filter" id="person-filter" aria-label="Filter by person"></select>
-    </div>
-    <div class="bar">
-      <input class="search" id="search" type="search" placeholder="Search gifts or people" aria-label="Search gifts or people">
-      <span class="spacer"></span>
-      <button class="icon-btn" id="invite" type="button" aria-label="Invite">
-        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
-      </button>
-      <button class="icon-btn" id="show-activity" type="button" aria-label="Activity">
-        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
-      </button>
-      <button class="btn" id="add-person" type="button">Add Person</button>
-      <button class="btn filled" id="add-gift" type="button">Add Gift</button>
     </div>
 
     <main id="app"><div class="blank">Loading your list…</div></main>
