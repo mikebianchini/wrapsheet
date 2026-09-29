@@ -137,6 +137,9 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 .hero-full-inner { max-width: 720px; margin: 0 auto; padding: 18px 16px 17px; position: relative; z-index: 1; }
 .hero-full .rule { width: 24px; height: 3px; background: var(--brand-gold); border-radius: 2px; margin: 0 0 6px; }
 .large-title { font: var(--tx-title1); letter-spacing: -.01em; margin: 0; color: #fff; }
+.hero-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.hero-title-actions { display: flex; gap: 2px; flex: none; }
+.hero-title-actions .icon-btn:hover { background: rgba(255,255,255,.12); }
 .large-subtitle { font: var(--tx-footnote); color: rgba(255,255,255,.68); margin: 3px 0 0; max-width: 42ch; }
 /* total-budget roll-up, sitting in the header itself like the hero's
    own "event budget" summary — only shown once someone sets a budget */
@@ -413,7 +416,17 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
   <div class="hero-full" id="app-large-title">
     <div class="hero-full-inner">
       <div class="rule" aria-hidden="true"></div>
-      <h1 class="large-title" id="title">Gift list</h1>
+      <div class="hero-title-row">
+        <h1 class="large-title" id="title">Gift list</h1>
+        <div class="hero-title-actions">
+          <button class="icon-btn" id="invite" type="button" aria-label="Invite">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+          </button>
+          <button class="icon-btn" id="show-activity" type="button" aria-label="Activity">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+          </button>
+        </div>
+      </div>
       <p class="large-subtitle">Shared gift ideas and purchases. Changes show up for everyone as they happen.</p>
       <div class="hero-budget" id="hero-budget" hidden>
         <div class="hero-budget-row"><span class="hb-label">Total Budget</span><span class="hb-amount" id="hb-amount"></span></div>
@@ -432,12 +445,6 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
     <div class="bar">
       <input class="search" id="search" type="search" placeholder="Search gifts or people" aria-label="Search gifts or people">
       <span class="spacer"></span>
-      <button class="icon-btn" id="invite" type="button" aria-label="Invite">
-        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
-      </button>
-      <button class="icon-btn" id="show-activity" type="button" aria-label="Activity">
-        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
-      </button>
       <button class="btn" id="add-person" type="button">Add Person</button>
       <button class="btn filled" id="add-gift" type="button">Add Gift</button>
     </div>
