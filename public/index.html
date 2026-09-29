@@ -18,30 +18,33 @@
    https://developer.apple.com/design/human-interface-guidelines/
 --------------------------------------------------------------------- */
 :root {
-  /* system colors (light) — kept for semantic meaning (bought/wrapped/destructive) */
-  --green: #34C759; --orange: #FF9500; --red: #FF3B30; --gray: #8E8E93;
-  --green-bg: rgba(52,199,89,.14); --orange-bg: rgba(255,149,0,.14); --red-bg: rgba(255,59,48,.12);
+  /* system colors — kept for semantic meaning (bought/wrapped/destructive) */
+  --green: #30D158; --orange: #FF9F0A; --red: #FF453A; --gray: #8E8E93;
+  --green-bg: rgba(48,209,88,.2); --orange-bg: rgba(255,159,10,.2); --red-bg: rgba(255,69,58,.2);
 
   /* BRAND — sampled directly from the WrapSheet app icon (navy square,
      gold ribbon-bow "W"). This is the app's real identity, not a generic
      iOS blue standing in for it: it drives the primary tint, links,
-     focus rings and the one hero surface per screen. */
-  --brand-navy: #0E2745; --brand-navy-deep: #081527; --brand-gold: #E2B255; --brand-gold-ink: #8A5E13;
-  --tint: var(--brand-navy);
-  --tint-bg: rgba(14,39,69,.08);
-  --on-tint: #FFFFFF;
+     focus rings and the one hero surface per screen. The whole page
+     canvas is the same navy — header, hero and body are one continuous
+     surface, with white/gold text and elevated dark cards on top. */
+  --brand-navy: #0E2745; --brand-navy-deep: #081527; --brand-gold: #EBC673; --brand-gold-ink: #EBC673;
+  --tint: var(--brand-gold);
+  --tint-bg: rgba(235,198,115,.16);
+  --on-tint: #241804;
 
-  /* labels */
-  --label: rgba(0,0,0,.92); --label-2: rgba(60,60,67,.6); --label-3: rgba(60,60,67,.3);
+  /* labels — light text, since the page canvas is always the dark navy brand color */
+  --label: rgba(255,255,255,.92); --label-2: rgba(235,235,245,.6); --label-3: rgba(235,235,245,.3);
 
-  /* backgrounds: systemGroupedBackground (page) / secondary (elevated row/card) / tertiary (nested field) */
-  --bg: #F2F2F7; --bg-elevated: #FFFFFF; --bg-elevated-2: #F2F2F7; --bg-navbar: rgba(242,242,247,.82);
-  --fill: rgba(120,120,128,.2); --fill-2: rgba(120,120,128,.12);
-  --separator: rgba(60,60,67,.29); --opaque-separator: #C6C6C8;
+  /* backgrounds: page canvas is the brand navy everywhere; elevated
+     row/card and nested-field surfaces stay dark neutral for contrast */
+  --bg: var(--brand-navy); --bg-elevated: #1C1C1E; --bg-elevated-2: #2C2C2E; --bg-navbar: rgba(14,39,69,.82);
+  --fill: rgba(120,120,128,.36); --fill-2: rgba(120,120,128,.24);
+  --separator: rgba(84,84,88,.65); --opaque-separator: #38383A;
 
   --radius-control: 10px; --radius-card: 14px; --radius-sheet: 20px;
-  --shadow-card: 0 1px 2px rgba(0,0,0,.06), 0 1px 1px rgba(0,0,0,.04);
-  --shadow-sheet: 0 2px 6px rgba(0,0,0,.1), 0 24px 48px -20px rgba(0,0,0,.3);
+  --shadow-card: 0 1px 2px rgba(0,0,0,.5), 0 1px 1px rgba(0,0,0,.4);
+  --shadow-sheet: 0 2px 8px rgba(0,0,0,.6), 0 28px 56px -20px rgba(0,0,0,.8);
   --material-thin: blur(20px) saturate(180%);
   --ease: cubic-bezier(.25,.1,.25,1);
 
@@ -60,26 +63,7 @@
   --tx-caption1: 400 12px/16px var(--font);
   --tx-caption2: 600 11px/13px var(--font);
 
-  color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --green: #30D158; --orange: #FF9F0A; --red: #FF453A; --gray: #8E8E93;
-    --green-bg: rgba(48,209,88,.2); --orange-bg: rgba(255,159,10,.2); --red-bg: rgba(255,69,58,.2);
-    /* navy nearly vanishes on a black surface, so gold — the mark's other
-       half — takes over as the tint; navy still owns the hero surfaces */
-    --brand-gold: #EBC673; --brand-gold-ink: #EBC673;
-    --tint: var(--brand-gold);
-    --tint-bg: rgba(235,198,115,.16);
-    --on-tint: #241804;
-    --label: rgba(255,255,255,.92); --label-2: rgba(235,235,245,.6); --label-3: rgba(235,235,245,.3);
-    --bg: #000000; --bg-elevated: #1C1C1E; --bg-elevated-2: #2C2C2E; --bg-navbar: rgba(0,0,0,.72);
-    --fill: rgba(120,120,128,.36); --fill-2: rgba(120,120,128,.24);
-    --separator: rgba(84,84,88,.65); --opaque-separator: #38383A;
-    --shadow-card: 0 1px 2px rgba(0,0,0,.5), 0 1px 1px rgba(0,0,0,.4);
-    --shadow-sheet: 0 2px 8px rgba(0,0,0,.6), 0 28px 56px -20px rgba(0,0,0,.8);
-  }
+  color-scheme: dark;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; }
@@ -265,9 +249,8 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
    single thin meter with text stacked above it */
 .budget2 { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
 .budget2-bar { height: 6px; border-radius: 3px; background: var(--fill); overflow: hidden; }
-.budget2-bar i { display: block; height: 100%; background: var(--brand-navy); border-radius: 3px; }
+.budget2-bar i { display: block; height: 100%; background: var(--brand-gold); border-radius: 3px; }
 .budget2-bar i.over { background: var(--red); }
-@media (prefers-color-scheme: dark) { .budget2-bar i { background: var(--brand-gold); } }
 .budget2-caption { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font: var(--tx-caption1); color: var(--label-2); font-variant-numeric: tabular-nums; }
 .budget2-status { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; color: var(--green); white-space: nowrap; }
 .budget2-status.over { color: var(--red); }
