@@ -205,6 +205,9 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 .large-title { font: var(--tx-title1); letter-spacing: -.01em; margin: 0; color: var(--label); }
 .hero-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .hero-title-row .days-badge { flex: none; }
+.hero-title-text { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.title-icon { font-size: 26px; line-height: 1; flex: none; }
+.title-icon:empty { display: none; }
 .large-subtitle { font: var(--tx-footnote); color: var(--label-2); margin: 3px 0 0; max-width: 42ch; }
 /* total-budget roll-up, sitting in the header itself like the hero's
    own "event budget" summary — only shown once someone sets a budget */
@@ -412,7 +415,14 @@ button.stat:active { opacity: .55; }
 .list-row { width: 100%; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--separator); padding: 12px 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
 .list-row:last-child { border-bottom: 0; }
 .list-row:hover { background: var(--fill-2); }
+.list-icon { flex: none; width: 36px; height: 36px; border-radius: 9px; background: var(--fill-2); display: grid; place-items: center; font-size: 19px; line-height: 1; }
 .list-row-main { flex: 1; min-width: 0; }
+/* icon picker: a custom emoji field plus a grid of quick presets */
+.field .icon-picker-input { width: 60px; flex: none; text-align: center; font-size: 20px; }
+.icon-picker-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.icon-opt { width: 34px; height: 34px; border: 0; border-radius: 7px; background: var(--fill); font-size: 17px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+.icon-opt:hover { background: var(--fill-2); }
+.icon-opt.active { background: var(--tint-bg); box-shadow: 0 0 0 1.5px var(--tint-ink) inset; }
 .list-row h3 { font: var(--tx-body); font-weight: 600; margin: 0; overflow-wrap: anywhere; color: var(--label); }
 .list-row .role { font: var(--tx-footnote); color: var(--label-2); }
 .list-row-menu { position: relative; flex: none; }
@@ -570,7 +580,10 @@ button.stat:active { opacity: .55; }
     <div class="hero-full-inner">
       <div class="rule" aria-hidden="true"></div>
       <div class="hero-title-row">
-        <h1 class="large-title" id="title">Gift list</h1>
+        <div class="hero-title-text">
+          <span class="title-icon" id="title-icon"></span>
+          <h1 class="large-title" id="title">Gift list</h1>
+        </div>
         <span class="days-badge" aria-live="polite"><b id="days">-</b> <span id="days-label">days</span></span>
       </div>
       <div class="hero-budget" id="hero-budget" hidden>
@@ -647,7 +660,7 @@ const dbase = getFirestore(app);
   var LABEL = { idea: "Idea", bought: "Bought", wrapped: "Wrapped" };
   var PLURAL_LABEL = { idea: "Ideas", bought: "Bought", wrapped: "Wrapped" };
   var GROUPS = ["Family", "Friends", "Neighbors", "Other"];
-  var state = { people: [], gifts: [], gotP: false, gotG: false, filter: "all", personFilter: "all", q: "", uid: null, name: "you", error: "", boardName: "", view: "recipients", expandedStatus: { idea: true, bought: true, wrapped: true } };
+  var state = { people: [], gifts: [], gotP: false, gotG: false, filter: "all", personFilter: "all", q: "", uid: null, name: "you", error: "", boardName: "", boardIcon: "", view: "recipients", expandedStatus: { idea: true, bought: true, wrapped: true } };
   var toastTimer = null;
   var boardId = null, unsubP = null, unsubG = null, enrichAttempted = {};
 
@@ -855,6 +868,22 @@ const dbase = getFirestore(app);
     var f = focusId && document.getElementById(focusId); if (f) f.focus();
   }
   function field(id, label, control) { return h("div", { class: "field" }, h("label", { for: id, text: label }), control); }
+  var ICON_PRESETS = ["🎁", "🎄", "🎅", "❄️", "🎉", "🥚", "🦃", "💍", "👶", "🏠", "✈️", "🎂"];
+  function iconPicker(id, initial) {
+    var input = h("input", { id: id, class: "icon-picker-input", type: "text", maxlength: "4", placeholder: "🎁", value: initial || "" });
+    var grid = h("div", { class: "icon-picker-grid" });
+    function markActive() {
+      Array.prototype.forEach.call(grid.children, function (c) { c.classList.toggle("active", c.textContent === input.value); });
+    }
+    ICON_PRESETS.forEach(function (emoji) {
+      grid.appendChild(h("button", { type: "button", class: "icon-opt", text: emoji, onclick: function () { input.value = emoji; markActive(); } }));
+    });
+    input.addEventListener("input", markActive);
+    markActive();
+    var wrap = h("div", {}, input, grid);
+    wrap.getValue = function () { return input.value.trim(); };
+    return wrap;
+  }
   var closeListMenu = null;
 
   /* a small "are you sure?" dialog for destructive actions — reuses
@@ -1223,6 +1252,7 @@ const dbase = getFirestore(app);
 
   function render() {
     $("#title").textContent = state.boardName || "Gift list";
+    $("#title-icon").textContent = state.boardIcon || "";
     var banner = $("#banner"); banner.textContent = "";
     if (state.error) banner.appendChild(h("div", { class: "notice", text: state.error }));
     $("#invite").hidden = !!state.error;
@@ -1362,6 +1392,11 @@ const dbase = getFirestore(app);
         if (closeListMenu) { closeListMenu(); return; }
         var items = [];
         if (b.ownerUid === state.uid) {
+          items.push(h("button", { class: "user-menu-item", type: "button", role: "menuitem", text: "Edit", onclick: function (e2) {
+            e2.stopPropagation();
+            close();
+            editListModal(b);
+          } }));
           items.push(h("button", { class: "user-menu-item", type: "button", role: "menuitem", text: "Duplicate", onclick: function (e2) {
             e2.stopPropagation();
             if (e2.target.disabled) return;
@@ -1406,6 +1441,7 @@ const dbase = getFirestore(app);
         if (e.target !== e.currentTarget) return;
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
       } },
+        h("span", { class: "list-icon" }, b.icon || "🎁"),
         h("div", { class: "list-row-main" },
           h("h3", { text: b.name || "Untitled list" }),
           h("div", { class: "role", text: b.ownerUid === state.uid ? "You created this" : "Shared with you" })),
@@ -1417,16 +1453,18 @@ const dbase = getFirestore(app);
 
   function createListModal() {
     var name = h("input", { id: "l-name", type: "text", maxlength: "60", placeholder: "Smith Family Christmas" });
+    var icon = iconPicker("l-icon", "");
     var createBtn = h("button", { class: "btn filled", type: "submit", text: "Create" });
     var form = h("form", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": "Create new list", onsubmit: function (e) {
       e.preventDefault();
       if (createBtn.disabled) return;
       var n = name.value.trim(); if (!n) { name.focus(); return; }
+      var ic = icon.getValue();
       var id = randomBoardId();
       createBtn.disabled = true; createBtn.textContent = "Creating…";
       Promise.all([
-        setDoc(doc(dbase, "boards", id), { name: n, ownerUid: state.uid, ownerName: state.name, createdAt: Date.now() }),
-        setDoc(doc(dbase, "users", state.uid, "boards", id), { name: n, ownerUid: state.uid, joinedAt: Date.now() })
+        setDoc(doc(dbase, "boards", id), { name: n, icon: ic, ownerUid: state.uid, ownerName: state.name, createdAt: Date.now() }),
+        setDoc(doc(dbase, "users", state.uid, "boards", id), { name: n, icon: ic, ownerUid: state.uid, joinedAt: Date.now() })
       ]).then(function () { closeModal(); navigate("/b/" + id); }, function (err) {
         console.error(err); toast("Couldn't create the list. Try again.");
         createBtn.disabled = false; createBtn.textContent = "Create";
@@ -1434,10 +1472,38 @@ const dbase = getFirestore(app);
     } },
       h("h3", { text: "Create New List" }),
       field("l-name", "List name", name),
+      field("l-icon", "Icon (optional)", icon),
       h("div", { class: "actions" },
         createBtn,
         h("button", { class: "btn", type: "button", text: "Cancel", onclick: closeModal })));
     openModal(form, "l-name");
+  }
+
+  function editListModal(b) {
+    var name = h("input", { id: "e-name", type: "text", maxlength: "60", value: b.name || "" });
+    var icon = iconPicker("e-icon", b.icon || "");
+    var saveBtn = h("button", { class: "btn filled", type: "submit", text: "Save" });
+    var form = h("form", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": "Edit list", onsubmit: function (e) {
+      e.preventDefault();
+      if (saveBtn.disabled) return;
+      var n = name.value.trim(); if (!n) { name.focus(); return; }
+      var ic = icon.getValue();
+      saveBtn.disabled = true; saveBtn.textContent = "Saving…";
+      Promise.all([
+        updateDoc(doc(dbase, "boards", b.id), { name: n, icon: ic }),
+        setDoc(doc(dbase, "users", state.uid, "boards", b.id), { name: n, icon: ic, ownerUid: b.ownerUid, joinedAt: b.joinedAt || Date.now() })
+      ]).then(function () { closeModal(); }, function (err) {
+        console.error(err); toast("Couldn't save those changes. Try again.");
+        saveBtn.disabled = false; saveBtn.textContent = "Save";
+      });
+    } },
+      h("h3", { text: "Edit List" }),
+      field("e-name", "List name", name),
+      field("e-icon", "Icon (optional)", icon),
+      h("div", { class: "actions" },
+        saveBtn,
+        h("button", { class: "btn", type: "button", text: "Cancel", onclick: closeModal })));
+    openModal(form, "e-name");
   }
 
   function joinListModal() {
@@ -1452,7 +1518,7 @@ const dbase = getFirestore(app);
       getDoc(doc(dbase, "boards", id)).then(function (snap) {
         if (!snap.exists()) { toast("That list doesn't exist, or the link's wrong."); joinBtn.disabled = false; joinBtn.textContent = "Join"; return; }
         var data = snap.data();
-        setDoc(doc(dbase, "users", state.uid, "boards", id), { name: data.name || "Untitled list", ownerUid: data.ownerUid || null, joinedAt: Date.now() }).then(function () {
+        setDoc(doc(dbase, "users", state.uid, "boards", id), { name: data.name || "Untitled list", icon: data.icon || "", ownerUid: data.ownerUid || null, joinedAt: Date.now() }).then(function () {
           closeModal();
           navigate("/b/" + id);
         });
@@ -1472,8 +1538,8 @@ const dbase = getFirestore(app);
       var id = randomBoardId();
       var newName = (b.name || "Untitled list") + " (copy)";
       var ops = [
-        setDoc(doc(dbase, "boards", id), { name: newName, ownerUid: state.uid, ownerName: state.name, createdAt: Date.now() }),
-        setDoc(doc(dbase, "users", state.uid, "boards", id), { name: newName, ownerUid: state.uid, joinedAt: Date.now() })
+        setDoc(doc(dbase, "boards", id), { name: newName, icon: b.icon || "", ownerUid: state.uid, ownerName: state.name, createdAt: Date.now() }),
+        setDoc(doc(dbase, "users", state.uid, "boards", id), { name: newName, icon: b.icon || "", ownerUid: state.uid, joinedAt: Date.now() })
       ];
       snap.docs.forEach(function (d) {
         var pd = d.data();
@@ -1506,7 +1572,7 @@ const dbase = getFirestore(app);
     if (unsubP) { unsubP(); unsubP = null; }
     if (unsubG) { unsubG(); unsubG = null; }
     if (unsubBoardDoc) { unsubBoardDoc(); unsubBoardDoc = null; }
-    state.people = []; state.gifts = []; state.gotP = false; state.gotG = false; state.error = ""; state.boardName = "";
+    state.people = []; state.gifts = []; state.gotP = false; state.gotG = false; state.error = ""; state.boardName = ""; state.boardIcon = "";
   }
   function teardownHome() {
     if (unsubMyBoards) { unsubMyBoards(); unsubMyBoards = null; }
@@ -1531,10 +1597,11 @@ const dbase = getFirestore(app);
       }
       var data = snap.data();
       state.boardName = data.name || "Untitled list";
+      state.boardIcon = data.icon || "";
       if (state.error === "This list doesn't exist, or the link isn't right.") { state.error = ""; }
       if (!joined) {
         joined = true;
-        setDoc(doc(dbase, "users", state.uid, "boards", id), { name: state.boardName, ownerUid: data.ownerUid || null, joinedAt: Date.now() }).catch(function (e) { console.error(e); });
+        setDoc(doc(dbase, "users", state.uid, "boards", id), { name: state.boardName, icon: state.boardIcon, ownerUid: data.ownerUid || null, joinedAt: Date.now() }).catch(function (e) { console.error(e); });
       }
       render();
     }, fail);
