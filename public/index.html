@@ -252,6 +252,8 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 .btn.plain { background: transparent; padding: 8px 6px; }
 .btn.plain:hover { background: transparent; text-decoration: underline; }
 .btn.danger { color: var(--red); }
+.btn.danger.filled { background: var(--red); color: #fff; }
+.btn.danger.filled:hover { filter: brightness(1.08); }
 .btn[disabled] { opacity: .5; cursor: default; }
 .icon-btn { border: 0; background: transparent; color: var(--label-2); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 7px; }
 .icon-btn:hover { background: var(--fill-2); color: var(--label); }
@@ -858,6 +860,20 @@ const dbase = getFirestore(app);
   function field(id, label, control) { return h("div", { class: "field" }, h("label", { for: id, text: label }), control); }
   var closeListMenu = null;
 
+  /* a small "are you sure?" dialog for destructive actions — reuses
+     the existing modal overlay rather than the browser's own confirm() */
+  function confirmModal(opts) {
+    var confirmBtn = h("button", { class: "btn danger filled", type: "button", text: opts.confirmText || "Remove" });
+    var form = h("div", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": opts.title },
+      h("h3", { text: opts.title }),
+      h("p", { style: "color:var(--label-2); margin:0; font:var(--tx-subhead);", text: opts.message }),
+      h("div", { class: "actions" },
+        confirmBtn,
+        h("button", { class: "btn", type: "button", text: "Cancel", onclick: closeModal })));
+    confirmBtn.addEventListener("click", function () { closeModal(); opts.onConfirm(); });
+    openModal(form);
+  }
+
   /* compact avatar in the nav bar, opens a small popover with the
      signed-in name and Sign Out — one implementation shared by the
      Home and Board nav bars */
@@ -1359,8 +1375,15 @@ const dbase = getFirestore(app);
         }
         items.push(h("button", { class: "user-menu-item danger", type: "button", role: "menuitem", text: "Remove", onclick: function (e2) {
           e2.stopPropagation();
-          deleteDoc(doc(dbase, "users", state.uid, "boards", b.id)).catch(function (err) { console.error(err); toast("Couldn't remove that."); });
           close();
+          confirmModal({
+            title: "Remove this list?",
+            message: "“" + (b.name || "Untitled list") + "” will be removed from your lists. " + (b.ownerUid === state.uid ? "Since you created it, it stays intact for anyone else you've shared it with." : "It stays intact for whoever owns it — you can rejoin with the invite link."),
+            confirmText: "Remove",
+            onConfirm: function () {
+              deleteDoc(doc(dbase, "users", state.uid, "boards", b.id)).catch(function (err) { console.error(err); toast("Couldn't remove that."); });
+            }
+          });
         } }));
         var panel = h.apply(null, ["div", { class: "list-row-menu-panel", role: "menu" }].concat(items));
         var r = menuBtn.getBoundingClientRect();
