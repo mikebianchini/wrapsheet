@@ -962,8 +962,6 @@ const dbase = getFirestore(app);
     var thumb = g.imageUrl
       ? h("img", { class: "g-thumb", src: g.imageUrl, alt: "", loading: "lazy", onerror: function (e) { e.target.replaceWith(fallbackThumb()); } })
       : fallbackThumb();
-    var editBtn = h("button", { class: "icon-btn", type: "button", "aria-label": "Edit " + (g.title || "gift"), onclick: function () { giftModal(g); } });
-    editBtn.appendChild(svg(ICON_CHEVRON_RIGHT));
     return h("li", { class: "gift" },
       h("div", { class: "g-main" }, h("div", { class: "g-line" }, thumb,
         h("div", { style: "min-width:0; flex:1;" },
@@ -973,8 +971,7 @@ const dbase = getFirestore(app);
           g.notes ? h("div", { class: "g-note", text: g.notes }) : null,
           meta.length ? h("div", { class: "g-meta", text: meta.join(" · ") }) : null))),
       h("div", { class: "g-side" },
-        pill,
-        editBtn));
+        pill));
   }
 
   function unsortedCard(gifts) {
