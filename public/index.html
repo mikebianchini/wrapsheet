@@ -140,9 +140,7 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 .hero-full .rule { width: 24px; height: 3px; background: var(--brand-gold); border-radius: 2px; margin: 0 0 6px; }
 .large-title { font: var(--tx-title1); letter-spacing: -.01em; margin: 0; color: #fff; }
 .hero-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.hero-title-actions { display: flex; align-items: center; gap: 2px; flex: none; }
-.hero-title-actions .days-badge { margin-inline-end: 8px; }
-.hero-title-actions .icon-btn:hover { background: rgba(255,255,255,.12); }
+.hero-title-row .days-badge { flex: none; }
 .large-subtitle { font: var(--tx-footnote); color: rgba(255,255,255,.68); margin: 3px 0 0; max-width: 42ch; }
 /* total-budget roll-up, sitting in the header itself like the hero's
    own "event budget" summary — only shown once someone sets a budget */
@@ -447,6 +445,12 @@ button.stat:active { opacity: .55; }
         </button>
       </div>
       <div class="navbar-trailing">
+        <button class="icon-btn" id="invite" type="button" aria-label="Invite">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+        </button>
+        <button class="icon-btn" id="show-activity" type="button" aria-label="Activity">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+        </button>
         <button class="nav-new-btn" id="board-new-list" type="button" aria-label="Create a new list">
           <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
         </button>
@@ -460,15 +464,7 @@ button.stat:active { opacity: .55; }
       <div class="rule" aria-hidden="true"></div>
       <div class="hero-title-row">
         <h1 class="large-title" id="title">Gift list</h1>
-        <div class="hero-title-actions">
-          <span class="days-badge" aria-live="polite"><b id="days">-</b> <span id="days-label">days</span></span>
-          <button class="icon-btn" id="invite" type="button" aria-label="Invite">
-            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
-          </button>
-          <button class="icon-btn" id="show-activity" type="button" aria-label="Activity">
-            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
-          </button>
-        </div>
+        <span class="days-badge" aria-live="polite"><b id="days">-</b> <span id="days-label">days</span></span>
       </div>
       <div class="hero-budget" id="hero-budget" hidden>
         <div class="hero-budget-row"><span class="hb-label">Total Budget</span><span class="hb-amount" id="hb-amount"></span></div>
