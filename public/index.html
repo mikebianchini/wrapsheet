@@ -266,7 +266,7 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 .g-thumb-fallback { width: 44px; height: 44px; border-radius: 8px; background: var(--bg-elevated-2); flex: none; display: grid; place-items: center; color: var(--label-3); }
 .g-thumb-fallback svg { width: 20px; height: 20px; }
 .g-main { min-width: 0; flex: 1; }
-.g-title-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.g-title-row { display: flex; align-items: baseline; gap: 8px; }
 .g-title { min-width: 0; font: var(--tx-body); overflow-wrap: anywhere; color: var(--label); }
 .g-title-btn { display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; text-decoration-color: var(--label-3); text-underline-offset: 3px; }
 .g-note { color: var(--label-2); font: var(--tx-footnote); overflow-wrap: anywhere; margin-top: 1px; }
@@ -968,8 +968,8 @@ const dbase = getFirestore(app);
       h("div", { class: "g-main" }, h("div", { class: "g-line" }, thumb,
         h("div", { style: "min-width:0; flex:1;" },
           h("div", { class: "g-title-row" },
-            h("div", { class: "g-title", title: g.title || "" }, h("button", { class: "g-title-btn", type: "button", text: truncate(g.title, 35), onclick: function () { giftModal(g); } })),
-            g.price != null ? h("span", { class: "g-price", text: money(g.price) }) : null),
+            g.price != null ? h("span", { class: "g-price", text: money(g.price) }) : null,
+            h("div", { class: "g-title", title: g.title || "" }, h("button", { class: "g-title-btn", type: "button", text: truncate(g.title, 35), onclick: function () { giftModal(g); } }))),
           g.notes ? h("div", { class: "g-note", text: g.notes }) : null,
           meta.length ? h("div", { class: "g-meta", text: meta.join(" · ") }) : null))),
       h("div", { class: "g-side" },
