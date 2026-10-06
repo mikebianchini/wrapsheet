@@ -295,6 +295,16 @@ button.stat:active { opacity: .55; }
 .chip { flex: 1; border: 0; background: transparent; border-radius: 7px; padding: 6px 8px; cursor: pointer; font: var(--tx-footnote); font-weight: 600; color: var(--label); display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
 .chip svg { width: 13px; height: 13px; flex: none; }
 .chip[aria-pressed="true"] { background: var(--fill); box-shadow: var(--shadow-card); }
+/* theme picker: a dedicated segmented control (not the filter-chip
+   style) so the selected option reads as a lifted card, not just a
+   subtle tint change */
+.theme-picker-field { margin: 2px 2px 8px; padding-top: 10px; border-top: 1px solid var(--separator); }
+.theme-picker-label { font: 600 11px/1 var(--font); text-transform: uppercase; letter-spacing: .05em; color: var(--label-2); padding: 0 2px 7px; }
+.theme-picker { display: flex; background: var(--fill); border-radius: var(--radius-control); padding: 2px; gap: 2px; }
+.theme-opt { flex: 1; border: 0; background: transparent; border-radius: 7px; padding: 7px 4px 6px; cursor: pointer; color: var(--label-2); display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font: 600 11px/1 var(--font); }
+.theme-opt svg { width: 16px; height: 16px; }
+.theme-opt:hover { color: var(--label); }
+.theme-opt[aria-checked="true"] { background: var(--bg-elevated); color: var(--label); box-shadow: var(--shadow-card); }
 .search { flex: 1 1 160px; min-width: 0; border: 0; background: var(--field-bg); color: var(--field-ink); border-radius: var(--radius-control); padding: 8px 12px; font: var(--tx-subhead); }
 .search::placeholder { color: var(--field-ink-2); }
 .person-filter {
@@ -705,6 +715,9 @@ const dbase = getFirestore(app);
   var ICON_PERSON_PLUS = "M9 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zM2 21a7 7 0 0 1 14 0M19 8v6M16 11h6";
   var ICON_COPY = "M8 8h11v11H8zM4 4h11v11H4z";
   var ICON_MORE = "M12 5a1 1 0 1 0 0-.01M12 12a1 1 0 1 0 0-.01M12 19a1 1 0 1 0 0-.01";
+  var ICON_THEME_AUTO = "M3 4h18v12H3zM8 20h8M12 16v4";
+  var ICON_THEME_LIGHT = "M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42";
+  var ICON_THEME_DARK = "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z";
   var STATUS_ICON = { idea: ICON_IDEA, bought: ICON_BAG, wrapped: ICON_GIFT };
   var CHIP_ICON = { all: ICON_LIST, idea: ICON_IDEA, bought: ICON_BAG, wrapped: ICON_GIFT };
 
@@ -855,21 +868,23 @@ const dbase = getFirestore(app);
     btn.addEventListener("click", function (e) {
       e.stopPropagation();
       if (closeUserMenu) { closeUserMenu(); return; }
-      var themeRow = h("div", { class: "chips", role: "radiogroup", "aria-label": "Appearance", style: "margin: 2px 2px 6px; border-top: 1px solid var(--separator); padding-top: 8px;" });
+      var themeRow = h("div", { class: "theme-picker", role: "radiogroup", "aria-label": "Appearance" });
       var curPref = themePref();
-      [["system", "Auto"], ["light", "Light"], ["dark", "Dark"]].forEach(function (o) {
-        themeRow.appendChild(h("button", { class: "chip", type: "button", role: "radio", "aria-checked": String(curPref === o[0]), "aria-pressed": String(curPref === o[0]), text: o[1], onclick: function () {
+      [["system", "Auto", ICON_THEME_AUTO], ["light", "Light", ICON_THEME_LIGHT], ["dark", "Dark", ICON_THEME_DARK]].forEach(function (o) {
+        themeRow.appendChild(h("button", { class: "theme-opt", type: "button", role: "radio", "aria-checked": String(curPref === o[0]), onclick: function () {
           setThemePref(o[0]);
           curPref = o[0];
           Array.prototype.forEach.call(themeRow.children, function (c, i) {
-            var on = String(["system", "light", "dark"][i] === curPref);
-            c.setAttribute("aria-checked", on); c.setAttribute("aria-pressed", on);
+            c.setAttribute("aria-checked", String(["system", "light", "dark"][i] === curPref));
           });
-        } }));
+        } }, svg(o[2]), o[1]));
       });
+      var themeField = h("div", { class: "theme-picker-field" },
+        h("div", { class: "theme-picker-label", text: "Appearance" }),
+        themeRow);
       var panel = h("div", { class: "user-menu-panel", role: "menu" },
         h("div", { class: "user-menu-name", text: state.name }),
-        themeRow,
+        themeField,
         showYourLists ? h("button", { class: "user-menu-item", type: "button", role: "menuitem", text: "Your Lists", onclick: function () { navigate("/"); } }) : null,
         h("button", { class: "user-menu-item danger", type: "button", role: "menuitem", text: "Sign Out", onclick: function () { signOut(auth); } }));
       wrap.appendChild(panel);
