@@ -273,11 +273,27 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 .g-side { text-align: right; display: flex; align-items: center; gap: 6px; }
 .g-price { font: var(--tx-subhead); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--label); white-space: nowrap; }
 
-/* status: plain colored value text + a small select for changing it */
-.status-select { appearance: none; -webkit-appearance: none; border: 0; background: transparent; cursor: pointer; font: var(--tx-footnote); font-weight: 600; text-align: right; padding-right: 2px; }
-.status-select[data-s="idea"] { color: var(--tint); }
-.status-select[data-s="bought"] { color: var(--green); }
-.status-select[data-s="wrapped"] { color: var(--brand-gold-ink); } /* wrapped = the mark's gold ribbon */
+/* status: a tappable pill badge, colored by status, that doubles as a select for changing it */
+.status-select {
+  appearance: none; -webkit-appearance: none; border: 1px solid transparent; cursor: pointer;
+  font: 700 12px/1 var(--font); letter-spacing: .01em; text-align: center; white-space: nowrap;
+  padding: 5px 10px 5px 24px; border-radius: 999px;
+  background-repeat: no-repeat; background-position: 9px center; background-size: 12px 12px;
+}
+.status-select:hover { filter: brightness(1.12); }
+.status-select:active { opacity: .7; }
+.status-select[data-s="idea"] {
+  background-color: var(--tint-bg); color: var(--tint);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23EBC673' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z'/%3E%3C/svg%3E");
+}
+.status-select[data-s="bought"] {
+  background-color: var(--green-bg); color: var(--green);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2330D158' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8h12l-1.2 12.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8zM9 8V6a3 3 0 0 1 6 0v2'/%3E%3C/svg%3E");
+}
+.status-select[data-s="wrapped"] { /* wrapped = the mark's gold ribbon */
+  background-color: var(--tint-bg); color: var(--brand-gold-ink);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23EBC673' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 9h16v4H4zM6 13h12v8H6zM12 9v12M8 9a2.2 2.2 0 1 1 4-1.3A2.2 2.2 0 1 1 16 9'/%3E%3C/svg%3E");
+}
 
 .empty { padding: 14px; color: var(--label-2); border-top: 1px solid var(--separator); font: var(--tx-subhead); }
 .p-foot { padding: 8px 10px; border-top: 1px solid var(--separator); display: flex; justify-content: space-between; }
