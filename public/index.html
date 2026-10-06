@@ -84,6 +84,7 @@ a { color: var(--tint); }
 }
 
 .wrap { max-width: 720px; margin: 0 auto; padding-inline: 16px; display: flex; flex-direction: column; gap: 24px; padding-block: 20px 8px; }
+#banner:empty { display: none; }
 .svg-icon { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 /* ---------------- sign-in gate ---------------- */
@@ -469,7 +470,6 @@ button.stat:active { opacity: .55; }
           </button>
         </div>
       </div>
-      <p class="large-subtitle">Shared gift ideas and purchases. Changes show up for everyone as they happen.</p>
       <div class="hero-budget" id="hero-budget" hidden>
         <div class="hero-budget-row"><span class="hb-label">Total Budget</span><span class="hb-amount" id="hb-amount"></span></div>
         <div class="hero-budget-bar"><i id="hb-fill"></i></div>
