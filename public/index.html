@@ -342,12 +342,13 @@ button.stat:active { opacity: .55; }
 .section-header { font: var(--tx-caption2); text-transform: uppercase; letter-spacing: .05em; color: var(--label-2); padding: 0 4px 6px; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .person { background: var(--fill); border-radius: var(--radius-card); overflow: hidden; box-shadow: var(--shadow-card); }
 .p-head { padding: 12px 14px 10px; display: flex; flex-direction: column; gap: 4px; }
-.p-title { display: flex; align-items: center; justify-content: flex-start; gap: 10px; }
+.p-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.p-title-name { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.p-spent { flex: none; font: var(--tx-footnote); color: var(--label-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .p-title h2 { margin: 0; min-width: 0; }
 .p-title-btn { display: block; max-width: 100%; text-align: left; border: 0; background: transparent; padding: 0; margin: 0; cursor: pointer; font: var(--tx-title3); overflow-wrap: anywhere; color: var(--label); text-decoration: underline; text-decoration-color: var(--label-3); text-underline-offset: 3px; }
 .p-avatar { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-navy); color: var(--brand-gold); font: 700 13px/1 var(--font); }
 .prefs { color: var(--label-2); font: var(--tx-footnote); overflow-wrap: anywhere; }
-.budget { display: flex; flex-direction: column; gap: 5px; font: var(--tx-footnote); color: var(--label-2); font-variant-numeric: tabular-nums; margin-top: 2px; }
 /* two-tone budget bar: a filled (spent) segment against a plain track,
    plus a caption row with a status dot — clearer at a glance than a
    single thin meter with text stacked above it */
@@ -1220,9 +1221,13 @@ const dbase = getFirestore(app);
   function personCard(p, gifts) {
     var spent = spentFor(p.id), planned = personGifts(p.id).reduce(function (s, g) { return s + (g.status === "idea" && g.price ? g.price : 0); }, 0);
     var initial = (String(p.name || "?").trim().charAt(0) || "?").toUpperCase();
-    var head = h("div", { class: "p-head" },
-      h("div", { class: "p-title" }, h("span", { class: "p-avatar", "aria-hidden": "true", text: initial }),
-        h("h2", {}, h("button", { class: "p-title-btn", type: "button", text: p.name, onclick: function () { personModal(p); } }))));
+    var titleName = h("div", { class: "p-title-name" }, h("span", { class: "p-avatar", "aria-hidden": "true", text: initial }),
+      h("h2", {}, h("button", { class: "p-title-btn", type: "button", text: p.name, onclick: function () { personModal(p); } })));
+    var titleRow = h("div", { class: "p-title" }, titleName);
+    if (!p.budget && (spent || planned)) {
+      titleRow.appendChild(h("span", { class: "p-spent", text: money(spent) + " spent" + (planned ? " · " + money(planned) + " in ideas" : "") }));
+    }
+    var head = h("div", { class: "p-head" }, titleRow);
     if (p.notes) head.appendChild(h("div", { class: "prefs", text: p.notes }));
     if (p.budget) {
       var pct = Math.min(100, Math.round(spent / p.budget * 100)), over = spent > p.budget;
@@ -1233,8 +1238,6 @@ const dbase = getFirestore(app);
         h("div", { class: "budget2-caption" },
           h("span", { text: leftCaption }),
           h("span", { class: "budget2-status" + (over ? " over" : "") }, h("span", { class: "status-dot" }), statusText))));
-    } else if (spent || planned) {
-      head.appendChild(h("div", { class: "budget" }, money(spent) + " spent" + (planned ? " · " + money(planned) + " in ideas" : "")));
     }
     var card = h("article", { class: "person" }, head);
     if (gifts.length) {
