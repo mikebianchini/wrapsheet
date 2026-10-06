@@ -198,13 +198,6 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 .toolbar-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .spacer { flex: 1 1 0; }
 
-/* quick add — styled as a grouped input row */
-.quick { display: flex; gap: 8px; background: var(--fill); border-radius: var(--radius-card); padding: 8px; box-shadow: var(--shadow-card); }
-.quick input { flex: 1 1 220px; min-width: 0; border: 0; background: var(--field-bg); color: var(--field-ink); border-radius: var(--radius-control); padding: 9px 12px; font: var(--tx-body); }
-.quick select { flex: 0 1 140px; min-width: 0; border: 0; background: var(--field-bg); color: var(--field-ink); border-radius: var(--radius-control); padding: 9px 10px; font: var(--tx-subhead); }
-.quick input::placeholder { color: var(--field-ink-2); }
-.quick-hint { margin: -6px 0 0; font: var(--tx-footnote); color: var(--label-2); }
-.link-btn { display: inline; background: transparent; border: 0; padding: 0; margin: 0; font: inherit; color: var(--tint); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 
 /* summary stats — plain grouped row, no card chrome competing with content */
 .stats { display: flex; background: var(--fill); border-radius: var(--radius-card); box-shadow: var(--shadow-card); overflow: hidden; }
@@ -475,16 +468,10 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
   <main class="wrap">
     <div id="banner"></div>
 
-    <form class="quick" id="quick" hidden>
-      <input id="q-link" type="text" placeholder="Paste a product link or type an idea" aria-label="Paste a product link or type an idea" autocomplete="off">
-      <select id="q-person" aria-label="Who is it for"></select>
-      <button class="btn filled" type="submit">Add</button>
-    </form>
-    <p class="quick-hint" id="quick-hint" hidden>Fastest way to add a gift idea. Setting a price or marking it bought right away? <button class="link-btn" type="button" id="add-gift">Open the full form</button>.</p>
-
     <div class="bar">
       <span class="spacer"></span>
-      <button class="btn plain" id="add-person" type="button">Add Recipient</button>
+      <button class="btn" id="add-person" type="button">Add Recipient</button>
+      <button class="btn filled" id="add-gift" type="button">Add Gift</button>
     </div>
 
     <section class="stats" id="stats" aria-label="Summary"></section>
@@ -1026,9 +1013,7 @@ const dbase = getFirestore(app);
     var banner = $("#banner"); banner.textContent = "";
     if (state.error) banner.appendChild(h("div", { class: "notice", text: state.error }));
     $("#invite").hidden = !!state.error;
-    $("#quick").hidden = !!state.error;
-    $("#quick-hint").hidden = !!state.error;
-    fillQuickPeople(); fillPersonFilter();
+    fillPersonFilter();
     renderStats(); renderHeroBudget(); renderChips(); renderViewTabs();
     var app = $("#app"); app.textContent = "";
     if (state.error) return;
@@ -1089,13 +1074,6 @@ const dbase = getFirestore(app);
       return url.hostname.replace(/^www\./, "");
     } catch (e) { return ""; }
   }
-  function fillQuickPeople() {
-    var sel = $("#q-person"); if (!sel) return;
-    var prev = sel.value;
-    if (!prev) { try { prev = localStorage.getItem("gl-person") || ""; } catch (e) {} }
-    sel.textContent = "";
-    sortedPeople().forEach(function (p) { var o = h("option", { value: p.id, text: p.name }); if (p.id === prev) o.selected = true; sel.appendChild(o); });
-  }
   function fillPersonFilter() {
     var sel = $("#person-filter"); if (!sel) return;
     if (state.personFilter !== "all" && !state.people.some(function (p) { return p.id === state.personFilter; })) state.personFilter = "all";
@@ -1106,33 +1084,7 @@ const dbase = getFirestore(app);
   }
 
   /* wiring (bound once) */
-  $("#q-person").addEventListener("change", function (e) { try { localStorage.setItem("gl-person", e.target.value); } catch (x) {} });
   $("#person-filter").addEventListener("change", function (e) { state.personFilter = e.target.value; render(); });
-  $("#quick").addEventListener("submit", function (e) {
-    e.preventDefault();
-    var raw = $("#q-link").value.trim(), pid = $("#q-person").value;
-    if (!raw) { $("#q-link").focus(); return; }
-    if (!pid) { toast("Add a person first."); return; }
-    var link = /^(https?:\/\/|www\.)\S+$/i.test(raw) ? safeUrl(raw) : "";
-    var guessedTitle = link ? (guessTitle(link) || "New idea") : raw.slice(0, 120);
-    var data = { personId: pid, title: guessedTitle, price: null, url: link, notes: "", status: "idea", addedBy: state.name, boughtBy: null, createdAt: Date.now(), imageUrl: null };
-    var pName = (state.people.filter(function (p) { return p.id === pid; })[0] || {}).name || "";
-    addDoc(giftsCol(), data).then(function (ref) {
-      $("#q-link").value = "";
-      toast("Added to " + pName + "'s ideas.");
-      logActivity(state.name + " added an idea for " + pName);
-      if (link) {
-        fetchLinkMeta(link).then(function (meta) {
-          if (!meta) return;
-          var patch = {};
-          if (meta.title && data.title === guessedTitle) patch.title = meta.title;
-          if (meta.image) patch.imageUrl = meta.image;
-          if (meta.price != null) patch.price = meta.price;
-          if (Object.keys(patch).length) updateDoc(ref, patch).catch(function (e) { console.error(e); });
-        });
-      }
-    }, function (e) { console.error(e); toast("That didn't save (" + (e && e.code || "error") + "). Try again."); });
-  });
   function activityModal() {
     var list = h("ul", { class: "activity-list" }, h("li", { text: "Loading…" }));
     var form = h("div", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": "Recent activity" },
