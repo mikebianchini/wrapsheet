@@ -404,9 +404,11 @@ button.stat:active { opacity: .55; }
 .list-row-main { flex: 1; min-width: 0; }
 .list-row h3 { font: var(--tx-body); font-weight: 600; margin: 0; overflow-wrap: anywhere; color: var(--label); }
 .list-row .role { font: var(--tx-footnote); color: var(--label-2); }
-.list-row-actions { display: flex; gap: 4px; flex: none; }
-.list-row-actions .btn { padding: 5px 9px; font: var(--tx-caption1); font-weight: 600; }
-.chevron { color: var(--label-3); flex: none; width: 16px; height: 16px; }
+.list-row-menu { position: relative; flex: none; }
+.list-row-menu-btn { border: 0; background: transparent; color: var(--label-3); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; }
+.list-row-menu-btn:hover, .list-row-menu-btn[aria-expanded="true"] { background: var(--fill-2); color: var(--label); }
+.list-row-menu-btn svg { width: 18px; height: 18px; }
+.list-row-menu-panel { position: absolute; top: calc(100% + 4px); right: 0; min-width: 150px; z-index: 35; background: var(--bg-elevated-2); border-radius: var(--radius-card); box-shadow: var(--shadow-sheet); padding: 6px; display: flex; flex-direction: column; gap: 2px; }
 
 /* ---------------- sheets (modals) ---------------- */
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; z-index: 40; }
@@ -706,6 +708,7 @@ const dbase = getFirestore(app);
   var ICON_PERSON = "M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zM4 21a8 8 0 0 1 16 0";
   var ICON_PERSON_PLUS = "M9 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zM2 21a7 7 0 0 1 14 0M19 8v6M16 11h6";
   var ICON_COPY = "M8 8h11v11H8zM4 4h11v11H4z";
+  var ICON_MORE = "M12 5a1 1 0 1 0 0-.01M12 12a1 1 0 1 0 0-.01M12 19a1 1 0 1 0 0-.01";
   var STATUS_ICON = { idea: ICON_IDEA, bought: ICON_BAG, wrapped: ICON_GIFT };
   var CHIP_ICON = { all: ICON_LIST, idea: ICON_IDEA, bought: ICON_BAG, wrapped: ICON_GIFT };
 
@@ -841,6 +844,7 @@ const dbase = getFirestore(app);
     var f = focusId && document.getElementById(focusId); if (f) f.focus();
   }
   function field(id, label, control) { return h("div", { class: "field" }, h("label", { for: id, text: label }), control); }
+  var closeListMenu = null;
 
   /* compact avatar in the nav bar, opens a small popover with the
      signed-in name and Sign Out — one implementation shared by the
@@ -1323,20 +1327,41 @@ const dbase = getFirestore(app);
     }
     var wrapDiv = h("div", { class: "lists" });
     homeState.boards.slice().sort(function (a, b) { return (b.joinedAt || 0) - (a.joinedAt || 0); }).forEach(function (b) {
-      var actionsRow = h("div", { class: "list-row-actions" },
-        h("button", { class: "btn plain", type: "button", text: "Remove", onclick: function (e) {
-          e.stopPropagation();
+      var menuBtn = h("button", { class: "list-row-menu-btn", type: "button", "aria-haspopup": "true", "aria-expanded": "false", "aria-label": "Options for " + (b.name || "list"), "data-tip": "Options" }, svg(ICON_MORE));
+      var menuWrap = h("div", { class: "list-row-menu" }, menuBtn);
+      menuBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (closeListMenu) { closeListMenu(); return; }
+        var items = [];
+        if (b.ownerUid === state.uid) {
+          items.push(h("button", { class: "user-menu-item", type: "button", role: "menuitem", text: "Duplicate", onclick: function (e2) {
+            e2.stopPropagation();
+            if (e2.target.disabled) return;
+            e2.target.disabled = true; e2.target.textContent = "Duplicating…";
+            duplicateBoard(b, e2.target);
+            close();
+          } }));
+        }
+        items.push(h("button", { class: "user-menu-item danger", type: "button", role: "menuitem", text: "Remove", onclick: function (e2) {
+          e2.stopPropagation();
           deleteDoc(doc(dbase, "users", state.uid, "boards", b.id)).catch(function (err) { console.error(err); toast("Couldn't remove that."); });
+          close();
         } }));
-      if (b.ownerUid === state.uid) {
-        actionsRow.appendChild(h("button", { class: "btn plain", type: "button", text: "Duplicate", onclick: function (e) {
-          e.stopPropagation();
-          if (e.target.disabled) return;
-          e.target.disabled = true; e.target.textContent = "Duplicating…";
-          duplicateBoard(b, e.target);
-        } }));
-      }
-      var chev = svg(ICON_CHEVRON_RIGHT); chev.setAttribute("class", "chevron");
+        var panel = h.apply(null, ["div", { class: "list-row-menu-panel", role: "menu" }].concat(items));
+        menuWrap.appendChild(panel);
+        menuBtn.setAttribute("aria-expanded", "true");
+        function close() {
+          if (panel.parentNode) panel.parentNode.removeChild(panel);
+          menuBtn.setAttribute("aria-expanded", "false");
+          document.removeEventListener("click", onDocClick);
+          document.removeEventListener("keydown", onKey);
+          closeListMenu = null;
+        }
+        function onDocClick() { close(); }
+        function onKey(ev) { if (ev.key === "Escape") close(); }
+        setTimeout(function () { document.addEventListener("click", onDocClick); document.addEventListener("keydown", onKey); }, 0);
+        closeListMenu = close;
+      });
       var open = function () { navigate("/b/" + b.id); };
       var row = h("div", { class: "list-row", role: "button", tabindex: "0", "aria-label": "Open " + (b.name || "list"), onclick: open, onkeydown: function (e) {
         if (e.target !== e.currentTarget) return;
@@ -1345,7 +1370,7 @@ const dbase = getFirestore(app);
         h("div", { class: "list-row-main" },
           h("h3", { text: b.name || "Untitled list" }),
           h("div", { class: "role", text: b.ownerUid === state.uid ? "You created this" : "Shared with you" })),
-        actionsRow, chev);
+        menuWrap);
       wrapDiv.appendChild(row);
     });
     box.appendChild(wrapDiv);
