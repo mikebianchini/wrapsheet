@@ -358,6 +358,14 @@ button.stat:active { opacity: .55; }
 
 @media (max-width: 480px) { .row2 { grid-template-columns: 1fr; } }
 
+/* small screens: the status pill no longer fits comfortably beside a
+   wrapped title, so drop it to its own row under the item instead of
+   letting it float vertically centered against the whole row height */
+@media (max-width: 480px) {
+  .gift { grid-template-columns: 1fr; }
+  .g-side { justify-content: flex-start; text-align: left; margin-top: 2px; margin-inline-start: 54px; }
+}
+
 .ptr { position: fixed; top: 6px; left: 50%; width: 36px; height: 36px; margin-left: -18px;
   border-radius: 50%; background: var(--bg-elevated); box-shadow: var(--shadow-card);
   display: flex; align-items: center; justify-content: center; z-index: 50; opacity: 0; pointer-events: none;
