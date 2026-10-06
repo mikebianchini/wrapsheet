@@ -214,7 +214,8 @@ button.stat:active { opacity: .55; }
 /* filter bar: segmented control + person menu + search */
 .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .chips { display: flex; background: var(--fill); border-radius: var(--radius-control); padding: 2px; gap: 2px; flex: 1 1 240px; }
-.chip { flex: 1; border: 0; background: transparent; border-radius: 8px; padding: 6px 8px; cursor: pointer; font: var(--tx-footnote); font-weight: 600; color: var(--label); }
+.chip { flex: 1; border: 0; background: transparent; border-radius: 8px; padding: 6px 8px; cursor: pointer; font: var(--tx-footnote); font-weight: 600; color: var(--label); display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+.chip svg { width: 13px; height: 13px; flex: none; }
 .chip[aria-pressed="true"] { background: var(--fill); box-shadow: var(--shadow-card); }
 .search { flex: 1 1 160px; min-width: 0; border: 0; background: var(--field-bg); color: var(--field-ink); border-radius: var(--radius-control); padding: 8px 12px; font: var(--tx-subhead); }
 .search::placeholder { color: var(--field-ink-2); }
@@ -222,7 +223,8 @@ button.stat:active { opacity: .55; }
 
 /* Recipients / Gifts view switcher */
 .view-tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--separator); }
-.view-tab { border: 0; background: transparent; padding: 4px 2px 10px; font: var(--tx-subhead); font-weight: 600; color: var(--label-2); cursor: pointer; position: relative; }
+.view-tab { border: 0; background: transparent; padding: 4px 2px 10px; font: var(--tx-subhead); font-weight: 600; color: var(--label-2); cursor: pointer; position: relative; display: inline-flex; align-items: center; gap: 6px; }
+.view-tab svg { width: 15px; height: 15px; flex: none; }
 .view-tab[aria-selected="true"] { color: var(--tint); }
 .view-tab[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; border-radius: 1px; background: var(--tint); }
 
@@ -413,7 +415,10 @@ button.stat:active { opacity: .55; }
   </div>
   <main class="wrap">
     <div class="toolbar-row">
-      <button class="btn filled" id="create-list" type="button">Create New List</button>
+      <button class="btn filled" id="create-list" type="button">
+        <svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        Create New List
+      </button>
     </div>
     <form class="join-row" id="join-form">
       <input id="join-input" type="text" placeholder="Paste an invite link to join" aria-label="Paste an invite link">
@@ -475,7 +480,10 @@ button.stat:active { opacity: .55; }
 
     <div class="bar">
       <span class="spacer"></span>
-      <button class="btn" id="add-person" type="button">Add Recipient</button>
+      <button class="btn" id="add-person" type="button">
+        <svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zM2 21a7 7 0 0 1 14 0M19 8v6M16 11h6"/></svg>
+        Add Recipient
+      </button>
       <button class="btn filled" id="add-gift" type="button">
         <svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16v4H4zM6 13h12v8H6zM12 9v12M8 9a2.2 2.2 0 1 1 4-1.3A2.2 2.2 0 1 1 16 9"/></svg>
         Add Gift
@@ -559,7 +567,12 @@ const dbase = getFirestore(app);
   var ICON_BAG = "M6 8h12l-1.2 12.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8zM9 8V6a3 3 0 0 1 6 0v2";
   var ICON_GIFT = "M4 9h16v4H4zM6 13h12v8H6zM12 9v12M8 9a2.2 2.2 0 1 1 4-1.3A2.2 2.2 0 1 1 16 9";
   var ICON_DOLLAR = "M12 2v20M16.5 6.5C16.5 5 14.8 4 12.5 4S8.5 5 8.5 6.8c0 3.6 8 1.8 8 5.6 0 2-2 3.1-4.5 3.1S7 14.4 7 12.8";
+  var ICON_LIST = "M4 6h16M4 12h16M4 18h16";
+  var ICON_PERSON = "M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zM4 21a8 8 0 0 1 16 0";
+  var ICON_PERSON_PLUS = "M9 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zM2 21a7 7 0 0 1 14 0M19 8v6M16 11h6";
+  var ICON_COPY = "M8 8h11v11H8zM4 4h11v11H4z";
   var STATUS_ICON = { idea: ICON_IDEA, bought: ICON_BAG, wrapped: ICON_GIFT };
+  var CHIP_ICON = { all: ICON_LIST, idea: ICON_IDEA, bought: ICON_BAG, wrapped: ICON_GIFT };
 
   var fmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
   var fmt2 = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -896,18 +909,19 @@ const dbase = getFirestore(app);
     var box = $("#chips"); box.textContent = "";
     box.hidden = state.view === "gifts";
     [["all", "All"], ["idea", "Ideas"], ["bought", "Bought"], ["wrapped", "Wrapped"]].forEach(function (c) {
-      box.appendChild(h("button", { class: "chip", type: "button", "aria-pressed": String(state.filter === c[0]), text: c[1], onclick: function () { state.filter = c[0]; render(); } }));
+      box.appendChild(h("button", { class: "chip", type: "button", "aria-pressed": String(state.filter === c[0]), onclick: function () { state.filter = c[0]; render(); } },
+        svg(CHIP_ICON[c[0]]), c[1]));
     });
   }
 
   function renderViewTabs() {
     var box = $("#view-tabs"); if (!box) return;
     box.textContent = "";
-    [["recipients", "Recipients"], ["gifts", "Gifts"]].forEach(function (v) {
+    [["recipients", "Recipients", ICON_PERSON], ["gifts", "Gifts", ICON_GIFT]].forEach(function (v) {
       box.appendChild(h("button", {
-        class: "view-tab", type: "button", role: "tab", "aria-selected": String(state.view === v[0]), text: v[1],
+        class: "view-tab", type: "button", role: "tab", "aria-selected": String(state.view === v[0]),
         onclick: function () { if (state.view !== v[0]) { state.view = v[0]; render(); } }
-      }));
+      }, svg(v[2]), v[1]));
     });
   }
 
@@ -1020,7 +1034,7 @@ const dbase = getFirestore(app);
       card.appendChild(ul);
     } else card.appendChild(h("div", { class: "empty", text: personGifts(p.id).length ? "No gifts match this filter." : "No ideas yet — add one, or forward a link from Safari with the WrapSheet Shortcut." }));
     card.appendChild(h("div", { class: "p-foot" },
-      h("button", { class: "btn plain", type: "button", text: "Add Gift", onclick: function () { giftModal(null, p.id); } }),
+      h("button", { class: "btn plain", type: "button", onclick: function () { giftModal(null, p.id); } }, svg(ICON_GIFT), "Add Gift"),
       h("span")));
     return card;
   }
@@ -1127,9 +1141,9 @@ const dbase = getFirestore(app);
       h("h3", { text: "Invite to This List" }),
       h("p", { style: "color:var(--label-2); margin:0; font:var(--tx-subhead);" }, "Anyone with this link can view and edit the list:"),
       h("div", { class: "notice share" }, h("code", { text: link }),
-        h("button", { class: "btn filled", type: "button", text: "Copy Link", onclick: function () {
+        h("button", { class: "btn filled", type: "button", onclick: function () {
           navigator.clipboard.writeText(link).then(function () { toast("Link copied"); }, function () { toast("Couldn't copy — select the link above and copy it manually."); });
-        } })),
+        } }, svg(ICON_COPY), "Copy Link")),
       h("div", { class: "actions" }, h("button", { class: "btn", type: "button", text: "Close", onclick: closeModal })));
     openModal(form);
   }
