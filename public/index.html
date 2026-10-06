@@ -242,7 +242,8 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 .person { background: var(--fill); border-radius: var(--radius-card); overflow: hidden; box-shadow: var(--shadow-card); }
 .p-head { padding: 12px 14px 10px; display: flex; flex-direction: column; gap: 4px; }
 .p-title { display: flex; align-items: center; justify-content: flex-start; gap: 10px; }
-.p-title h2 { font: var(--tx-title3); margin: 0; overflow-wrap: anywhere; color: var(--label); }
+.p-title h2 { margin: 0; min-width: 0; }
+.p-title-btn { display: block; max-width: 100%; text-align: left; border: 0; background: transparent; padding: 0; margin: 0; cursor: pointer; font: var(--tx-title3); overflow-wrap: anywhere; color: var(--label); text-decoration: underline; text-decoration-color: var(--label-3); text-underline-offset: 3px; }
 .p-avatar { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-navy); color: var(--brand-gold); font: 700 13px/1 var(--font); }
 .prefs { color: var(--label-2); font: var(--tx-footnote); overflow-wrap: anywhere; }
 .budget { display: flex; flex-direction: column; gap: 5px; font: var(--tx-footnote); color: var(--label-2); font-variant-numeric: tabular-nums; margin-top: 2px; }
@@ -990,7 +991,8 @@ const dbase = getFirestore(app);
     var spent = spentFor(p.id), planned = personGifts(p.id).reduce(function (s, g) { return s + (g.status === "idea" && g.price ? g.price : 0); }, 0);
     var initial = (String(p.name || "?").trim().charAt(0) || "?").toUpperCase();
     var head = h("div", { class: "p-head" },
-      h("div", { class: "p-title" }, h("span", { class: "p-avatar", "aria-hidden": "true", text: initial }), h("h2", { text: p.name })));
+      h("div", { class: "p-title" }, h("span", { class: "p-avatar", "aria-hidden": "true", text: initial }),
+        h("h2", {}, h("button", { class: "p-title-btn", type: "button", text: p.name, onclick: function () { personModal(p); } }))));
     if (p.notes) head.appendChild(h("div", { class: "prefs", text: p.notes }));
     if (p.budget) {
       var pct = Math.min(100, Math.round(spent / p.budget * 100)), over = spent > p.budget;
@@ -1012,7 +1014,7 @@ const dbase = getFirestore(app);
     } else card.appendChild(h("div", { class: "empty", text: personGifts(p.id).length ? "No gifts match this filter." : "No ideas yet — add one, or forward a link from Safari with the WrapSheet Shortcut." }));
     card.appendChild(h("div", { class: "p-foot" },
       h("button", { class: "btn plain", type: "button", text: "Add Gift", onclick: function () { giftModal(null, p.id); } }),
-      h("button", { class: "btn plain", type: "button", text: "Edit Person", onclick: function () { personModal(p); } })));
+      h("span")));
     return card;
   }
 
