@@ -39,7 +39,7 @@
   /* backgrounds: page canvas is the brand navy everywhere; elevated
      row/card and nested-field surfaces stay dark neutral for contrast */
   --bg: var(--brand-navy); --bg-elevated: #1C1C1E; --bg-elevated-2: #2C2C2E; --bg-navbar: rgba(14,39,69,.82);
-  --field-bg: #3C3C43;
+  --field-bg: #FFFFFF; --field-ink: #1C1C1E; --field-ink-2: rgba(28,28,30,.55);
   --fill: rgba(120,120,128,.36); --fill-2: rgba(120,120,128,.24);
   --separator: rgba(84,84,88,.65); --opaque-separator: #38383A;
 
@@ -200,8 +200,9 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 
 /* quick add — styled as a grouped input row */
 .quick { display: flex; gap: 8px; background: var(--fill); border-radius: var(--radius-card); padding: 8px; box-shadow: var(--shadow-card); }
-.quick input { flex: 1 1 220px; min-width: 0; border: 0; background: var(--field-bg); border-radius: var(--radius-control); padding: 9px 12px; font: var(--tx-body); }
-.quick select { flex: 0 1 140px; min-width: 0; border: 0; background: var(--field-bg); border-radius: var(--radius-control); padding: 9px 10px; font: var(--tx-subhead); }
+.quick input { flex: 1 1 220px; min-width: 0; border: 0; background: var(--field-bg); color: var(--field-ink); border-radius: var(--radius-control); padding: 9px 12px; font: var(--tx-body); }
+.quick select { flex: 0 1 140px; min-width: 0; border: 0; background: var(--field-bg); color: var(--field-ink); border-radius: var(--radius-control); padding: 9px 10px; font: var(--tx-subhead); }
+.quick input::placeholder { color: var(--field-ink-2); }
 
 /* summary stats — plain grouped row, no card chrome competing with content */
 .stats { display: flex; background: var(--fill); border-radius: var(--radius-card); box-shadow: var(--shadow-card); overflow: hidden; }
@@ -217,8 +218,8 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 .chips { display: flex; background: var(--fill); border-radius: var(--radius-control); padding: 2px; gap: 2px; flex: 1 1 240px; }
 .chip { flex: 1; border: 0; background: transparent; border-radius: 8px; padding: 6px 8px; cursor: pointer; font: var(--tx-footnote); font-weight: 600; color: var(--label); }
 .chip[aria-pressed="true"] { background: var(--fill); box-shadow: var(--shadow-card); }
-.search { flex: 1 1 160px; min-width: 0; border: 0; background: var(--field-bg); border-radius: var(--radius-control); padding: 8px 12px; font: var(--tx-subhead); }
-.search::placeholder { color: var(--label-2); }
+.search { flex: 1 1 160px; min-width: 0; border: 0; background: var(--field-bg); color: var(--field-ink); border-radius: var(--radius-control); padding: 8px 12px; font: var(--tx-subhead); }
+.search::placeholder { color: var(--field-ink-2); }
 .person-filter { flex: 0 1 150px; min-width: 0; border: 0; background: var(--fill); border-radius: var(--radius-control); padding: 8px 10px; font: var(--tx-subhead); font-weight: 600; color: var(--label); }
 
 /* Recipients / Gifts view switcher */
@@ -284,7 +285,8 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 
 /* ---------------- home: list of lists ---------------- */
 .join-row { display: flex; gap: 8px; background: var(--fill); border-radius: var(--radius-card); padding: 8px; box-shadow: var(--shadow-card); }
-.join-row input { flex: 1 1 220px; min-width: 0; border: 0; background: var(--field-bg); border-radius: var(--radius-control); padding: 9px 12px; font: var(--tx-body); }
+.join-row input { flex: 1 1 220px; min-width: 0; border: 0; background: var(--field-bg); color: var(--field-ink); border-radius: var(--radius-control); padding: 9px 12px; font: var(--tx-body); }
+.join-row input::placeholder { color: var(--field-ink-2); }
 .lists { background: var(--fill); border-radius: var(--radius-card); box-shadow: var(--shadow-card); overflow: hidden; }
 .list-row { width: 100%; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--separator); padding: 12px 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
 .list-row:last-child { border-bottom: 0; }
@@ -302,7 +304,8 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 .modal h3 { font: var(--tx-title3); margin: 0; color: var(--label); }
 .field { display: flex; flex-direction: column; gap: 4px; }
 .field label { font: var(--tx-footnote); font-weight: 600; color: var(--label-2); }
-.field input, .field select, .field textarea { border: 0; background: var(--field-bg); border-radius: var(--radius-control); padding: 10px 12px; width: 100%; min-width: 0; font: var(--tx-body); }
+.field input, .field select, .field textarea { border: 0; background: var(--field-bg); color: var(--field-ink); border-radius: var(--radius-control); padding: 10px 12px; width: 100%; min-width: 0; font: var(--tx-body); }
+.field input::placeholder, .field textarea::placeholder { color: var(--field-ink-2); }
 .field textarea { resize: vertical; min-height: 60px; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
