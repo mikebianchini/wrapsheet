@@ -517,10 +517,10 @@ button.stat:active { opacity: .55; }
         </button>
       </div>
       <div class="navbar-trailing">
-        <button class="icon-btn" id="invite" type="button" aria-label="Invite">
+        <button class="icon-btn" id="invite" type="button" aria-label="Invite" title="Invite">
           <svg class="svg-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
         </button>
-        <button class="icon-btn" id="show-activity" type="button" aria-label="Activity">
+        <button class="icon-btn" id="show-activity" type="button" aria-label="Activity" title="Activity">
           <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
         </button>
         <button class="nav-new-btn" id="board-new-list" type="button" aria-label="Create a new list">
@@ -824,7 +824,7 @@ const dbase = getFirestore(app);
     container.textContent = "";
     var initial = (String(state.name || "?").trim().charAt(0) || "?").toUpperCase();
     var avatar = h("span", { class: "user-avatar" }, state.photoURL ? h("img", { src: state.photoURL, alt: "", referrerpolicy: "no-referrer" }) : initial);
-    var btn = h("button", { class: "user-avatar-btn", type: "button", "aria-haspopup": "true", "aria-expanded": "false", "aria-label": "Account: " + state.name }, avatar);
+    var btn = h("button", { class: "user-avatar-btn", type: "button", "aria-haspopup": "true", "aria-expanded": "false", "aria-label": "Account: " + state.name, title: "Account: " + state.name }, avatar);
     var wrap = h("div", { class: "user-menu" }, btn);
     btn.addEventListener("click", function (e) {
       e.stopPropagation();
