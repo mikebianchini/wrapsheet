@@ -1348,7 +1348,11 @@ const dbase = getFirestore(app);
           close();
         } }));
         var panel = h.apply(null, ["div", { class: "list-row-menu-panel", role: "menu" }].concat(items));
-        menuWrap.appendChild(panel);
+        var r = menuBtn.getBoundingClientRect();
+        panel.style.position = "fixed";
+        panel.style.top = (r.bottom + 4) + "px";
+        panel.style.right = (window.innerWidth - r.right) + "px";
+        document.body.appendChild(panel);
         menuBtn.setAttribute("aria-expanded", "true");
         function close() {
           if (panel.parentNode) panel.parentNode.removeChild(panel);
