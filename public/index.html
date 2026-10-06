@@ -182,7 +182,7 @@ a { color: var(--tint-ink); }
    sitting on top of a colored card — the user menu now lives in that
    same header instead of a separate strip */
 .navbar { position: relative; z-index: 30; background: var(--bg); }
-.navbar-inner { max-width: 720px; margin: 0 auto; padding-inline: 16px; min-height: 60px; display: flex; align-items: center; gap: 10px; }
+.navbar-inner { max-width: 720px; margin: 0 auto; padding-inline: 16px; padding-block-start: env(safe-area-inset-top, 0px); min-height: 60px; display: flex; align-items: center; gap: 10px; }
 .navbar-leading, .navbar-trailing { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .navbar-trailing { margin-inline-start: auto; }
 .navbar-title { font: 600 16px/1.2 var(--font); color: var(--label); opacity: 0; transform: translateY(4px); transition: opacity .18s var(--ease), transform .18s var(--ease); flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -420,6 +420,14 @@ button.stat:active { opacity: .55; }
 .toast-row button { border: 0; background: transparent; color: var(--bg); font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0; white-space: nowrap; font: inherit; }
 
 @media (max-width: 480px) { .row2 { grid-template-columns: 1fr; } }
+
+/* installed-as-an-app (home screen / standalone) tends to sit the
+   header right at the top edge, close to the status bar / rounded
+   corners — give the icon buttons a little more breathing room above
+   them so they're easier to hit with a thumb */
+@media (max-width: 480px) {
+  .navbar-inner { padding-block-start: calc(env(safe-area-inset-top, 0px) + 14px); min-height: 64px; }
+}
 
 /* small screens: the status pill no longer fits comfortably beside a
    wrapped title, so drop it to its own row under the item instead of
