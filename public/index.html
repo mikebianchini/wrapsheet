@@ -474,9 +474,8 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
     <div id="banner"></div>
 
     <div class="bar">
-      <input class="search" id="search" type="search" placeholder="Search gifts or people" aria-label="Search gifts or people">
       <span class="spacer"></span>
-      <button class="btn" id="add-person" type="button">Add Person</button>
+      <button class="btn" id="add-person" type="button">Add Recipient</button>
       <button class="btn filled" id="add-gift" type="button">Add Gift</button>
     </div>
 
@@ -843,12 +842,12 @@ const dbase = getFirestore(app);
       });
       closeModal();
     } },
-      h("h3", { text: editing ? "Edit Person" : "Add Person" }),
+      h("h3", { text: editing ? "Edit Person" : "Add Recipient" }),
       field("p-name", "Name", name),
       h("div", { class: "row2" }, field("p-group", "Group", grp), field("p-budget", "Budget (USD)", budget)),
       field("p-notes", "Gift preferences (optional)", prefs),
       h("div", { class: "actions" },
-        h("button", { class: "btn filled", type: "submit", text: editing ? "Save" : "Add Person" }),
+        h("button", { class: "btn filled", type: "submit", text: editing ? "Save" : "Add Recipient" }),
         h("button", { class: "btn", type: "button", text: "Cancel", onclick: closeModal }),
         h("span", { class: "spacer" }), del));
     openModal(form, "p-name");
@@ -1033,7 +1032,7 @@ const dbase = getFirestore(app);
     if (!state.gotP || !state.gotG) { app.appendChild(h("div", { class: "blank", text: "Loading your list..." })); return; }
     var hasUnsorted = state.gifts.some(function (g) { return !g.personId; });
     if (!state.people.length && !hasUnsorted) {
-      app.appendChild(h("div", { class: "blank" }, h("img", { src: "/icons/icon-48.png", alt: "" }), "No one on the list yet. Tap Add Person to start, or forward a product link from Safari with the WrapSheet Shortcut."));
+      app.appendChild(h("div", { class: "blank" }, h("img", { src: "/icons/icon-48.png", alt: "" }), "No one on the list yet. Tap Add Recipient to start, or forward a product link from Safari with the WrapSheet Shortcut."));
       return;
     }
     var q = state.q.trim().toLowerCase(), filtering = state.filter !== "all" || state.personFilter !== "all" || !!q;
@@ -1161,7 +1160,6 @@ const dbase = getFirestore(app);
   }
   $("#invite").addEventListener("click", inviteModal);
   $("#show-activity").addEventListener("click", activityModal);
-  $("#search").addEventListener("input", function (e) { state.q = e.target.value; render(); });
   $("#add-person").addEventListener("click", function () { personModal(); });
   $("#add-gift").addEventListener("click", function () { giftModal(); });
   $("#overlay").addEventListener("mousedown", function (e) { if (e.target === e.currentTarget) closeModal(); });
