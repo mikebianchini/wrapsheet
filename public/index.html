@@ -297,7 +297,13 @@ button.stat:active { opacity: .55; }
 .chip[aria-pressed="true"] { background: var(--fill); box-shadow: var(--shadow-card); }
 .search { flex: 1 1 160px; min-width: 0; border: 0; background: var(--field-bg); color: var(--field-ink); border-radius: var(--radius-control); padding: 8px 12px; font: var(--tx-subhead); }
 .search::placeholder { color: var(--field-ink-2); }
-.person-filter { flex: 0 1 150px; min-width: 0; border: 0; background: var(--fill); border-radius: var(--radius-control); padding: 8px 10px; font: var(--tx-subhead); font-weight: 600; color: var(--label); }
+.person-filter {
+  flex: 0 1 150px; min-width: 0; border: 0; background: var(--fill); border-radius: var(--radius-control);
+  padding: 8px 26px 8px 10px; font: var(--tx-subhead); font-weight: 600; color: var(--label); cursor: pointer;
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238E8E93' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; background-size: 10px 10px;
+}
 
 /* Recipients / Gifts view switcher */
 .view-tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--separator); }
