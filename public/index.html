@@ -846,7 +846,7 @@ const dbase = getFirestore(app);
      signed-in name and Sign Out — one implementation shared by the
      Home and Board nav bars */
   var closeUserMenu = null;
-  function renderUserMenu(container) {
+  function renderUserMenu(container, showYourLists) {
     container.textContent = "";
     var initial = (String(state.name || "?").trim().charAt(0) || "?").toUpperCase();
     var avatar = h("span", { class: "user-avatar" }, state.photoURL ? h("img", { src: state.photoURL, alt: "", referrerpolicy: "no-referrer" }) : initial);
@@ -870,6 +870,7 @@ const dbase = getFirestore(app);
       var panel = h("div", { class: "user-menu-panel", role: "menu" },
         h("div", { class: "user-menu-name", text: state.name }),
         themeRow,
+        showYourLists ? h("button", { class: "user-menu-item", type: "button", role: "menuitem", text: "Your Lists", onclick: function () { navigate("/"); } }) : null,
         h("button", { class: "user-menu-item danger", type: "button", role: "menuitem", text: "Sign Out", onclick: function () { signOut(auth); } }));
       wrap.appendChild(panel);
       btn.setAttribute("aria-expanded", "true");
@@ -1469,7 +1470,7 @@ const dbase = getFirestore(app);
     teardownHome();
     $("#home-root").hidden = true; $("#app-root").hidden = false;
     boardId = id;
-    renderUserMenu($("#whoami"));
+    renderUserMenu($("#whoami"), true);
 
     if (unsubP) unsubP(); if (unsubG) unsubG(); if (unsubBoardDoc) unsubBoardDoc();
     function fail(e) { console.error(e); state.error = "The list stopped updating (" + (e && e.code || "error") + "). Reload the page to reconnect."; render(); }
