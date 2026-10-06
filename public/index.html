@@ -9,7 +9,18 @@
 <link rel="icon" type="image/png" sizes="48x48" href="/icons/icon-48.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png">
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#0E2745">
+<meta name="theme-color" content="#0E2745" id="meta-theme-color">
+<script>
+/* applied synchronously, before first paint, so a manually-chosen theme
+   never flashes the wrong colors; the system default needs no help here
+   since the CSS media query already handles it before paint */
+(function () {
+  try {
+    var t = localStorage.getItem("wrapsheet-theme");
+    if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+})();
+</script>
 <style>
 /* ---------------------------------------------------------------------
    Apple Human Interface Guidelines tokens.
@@ -33,15 +44,23 @@
   --tint-bg: rgba(235,198,115,.16);
   --on-tint: #241804;
 
-  /* labels — light text, since the page canvas is always the dark navy brand color */
+  /* labels — light text by default (dark theme); the light theme block
+     below swaps these to dark-on-light */
   --label: rgba(255,255,255,.92); --label-2: rgba(235,235,245,.6); --label-3: rgba(235,235,245,.3);
 
-  /* backgrounds: page canvas is the brand navy everywhere; elevated
+  /* backgrounds: page canvas is the brand navy by default; elevated
      row/card and nested-field surfaces stay dark neutral for contrast */
   --bg: var(--brand-navy); --bg-elevated: #1C1C1E; --bg-elevated-2: #2C2C2E; --bg-navbar: rgba(14,39,69,.82);
   --field-bg: #ffffffbf; --field-ink: #1C1C1E; --field-ink-2: rgba(28,28,30,.55);
   --fill: rgba(120,120,128,.36); --fill-2: rgba(120,120,128,.24);
   --separator: rgba(84,84,88,.65); --opaque-separator: #38383A;
+  --avatar-ring: rgba(255,255,255,.5); --avatar-ring-hover: rgba(255,255,255,.8);
+  --modal-border: rgba(255,255,255,.1);
+  /* status-pill text/wash — separate from --tint/--green so those can
+     stay bright for buttons/links/focus rings; pill text needs more
+     contrast against a pale wash once the canvas goes light */
+  --badge-gold-bg: var(--tint-bg); --badge-gold-ink: var(--brand-gold);
+  --badge-green-bg: var(--green-bg); --badge-green-ink: var(--green);
 
   --radius-control: 10px; --radius-card: 14px; --radius-sheet: 20px;
   --shadow-card: 0 1px 2px rgba(0,0,0,.5), 0 1px 1px rgba(0,0,0,.4);
@@ -66,6 +85,43 @@
 
   color-scheme: dark;
 }
+
+/* ---------------- light theme ----------------
+   Follows the visitor's OS setting by default; a manual pick in the
+   account menu (stored as data-theme on <html>) overrides it either way.
+   Brand gold/navy stay the accent everywhere — only the canvas, text
+   and neutral surfaces invert. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --label: rgba(0,0,0,.88); --label-2: rgba(60,60,67,.6); --label-3: rgba(60,60,67,.3);
+    --bg: #F2F2F7; --bg-elevated: #FFFFFF; --bg-elevated-2: #F7F7FA; --bg-navbar: rgba(242,242,247,.82);
+    --field-bg: rgba(118,118,128,.12); --field-ink: #1C1C1E; --field-ink-2: rgba(60,60,67,.6);
+    --fill: rgba(120,120,128,.12); --fill-2: rgba(120,120,128,.08);
+    --separator: rgba(60,60,67,.29); --opaque-separator: #C6C6C8;
+    --avatar-ring: rgba(14,39,69,.25); --avatar-ring-hover: rgba(14,39,69,.4);
+    --modal-border: rgba(0,0,0,.08);
+    --shadow-card: 0 1px 2px rgba(0,0,0,.08), 0 1px 1px rgba(0,0,0,.04);
+    --shadow-sheet: 0 2px 8px rgba(0,0,0,.1), 0 20px 40px -20px rgba(0,0,0,.2);
+    --badge-gold-bg: rgba(193,147,43,.16); --badge-gold-ink: #8A5F0D;
+    --badge-green-bg: rgba(52,199,89,.16); --badge-green-ink: #1F8A3D;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --label: rgba(0,0,0,.88); --label-2: rgba(60,60,67,.6); --label-3: rgba(60,60,67,.3);
+  --bg: #F2F2F7; --bg-elevated: #FFFFFF; --bg-elevated-2: #F7F7FA; --bg-navbar: rgba(242,242,247,.82);
+  --field-bg: rgba(118,118,128,.12); --field-ink: #1C1C1E; --field-ink-2: rgba(60,60,67,.6);
+  --fill: rgba(120,120,128,.12); --fill-2: rgba(120,120,128,.08);
+  --separator: rgba(60,60,67,.29); --opaque-separator: #C6C6C8;
+  --avatar-ring: rgba(14,39,69,.25); --avatar-ring-hover: rgba(14,39,69,.4);
+  --modal-border: rgba(0,0,0,.08);
+  --shadow-card: 0 1px 2px rgba(0,0,0,.08), 0 1px 1px rgba(0,0,0,.04);
+  --shadow-sheet: 0 2px 8px rgba(0,0,0,.1), 0 20px 40px -20px rgba(0,0,0,.2);
+  --badge-gold-bg: rgba(193,147,43,.16); --badge-gold-ink: #8A5F0D;
+  --badge-green-bg: rgba(52,199,89,.16); --badge-green-ink: #1F8A3D;
+  color-scheme: light;
+}
+
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; }
 body {
@@ -113,56 +169,56 @@ a { color: var(--tint); }
 .g-btn svg { width: 18px; height: 18px; }
 
 /* ---------------- navigation bar (sticky, large-title collapse) ---------------- */
-/* the nav bar is permanently navy, the same surface as the hero below
-   it, so the two read as one continuous header rather than a plain
-   bar sitting on top of a colored card — the user menu now lives in
-   that same header instead of a separate strip */
-.navbar { position: relative; z-index: 30; background: var(--brand-navy); }
+/* the nav bar is the same surface as the hero below it (both var(--bg)),
+   so the two read as one continuous header rather than a plain bar
+   sitting on top of a colored card — the user menu now lives in that
+   same header instead of a separate strip */
+.navbar { position: relative; z-index: 30; background: var(--bg); }
 .navbar-inner { max-width: 720px; margin: 0 auto; padding-inline: 16px; min-height: 60px; display: flex; align-items: center; gap: 10px; }
 .navbar-leading, .navbar-trailing { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .navbar-trailing { margin-inline-start: auto; }
-.navbar-title { font: 600 16px/1.2 var(--font); color: #fff; opacity: 0; transform: translateY(4px); transition: opacity .18s var(--ease), transform .18s var(--ease); flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.navbar-title { font: 600 16px/1.2 var(--font); color: var(--label); opacity: 0; transform: translateY(4px); transition: opacity .18s var(--ease), transform .18s var(--ease); flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .navbar.is-collapsed .navbar-title { opacity: 1; transform: none; }
 .brand-lockup { display: inline-flex; align-items: center; gap: 9px; }
-.brand-lockup img { width: 32px; height: 32px; border-radius: 8px; box-shadow: 0 0 0 1px rgba(255,255,255,.18); }
-.brand-lockup span { font: 700 17px/1 var(--font); letter-spacing: -.01em; color: #fff; }
+.brand-lockup img { width: 32px; height: 32px; border-radius: 8px; box-shadow: 0 0 0 1px var(--separator); }
+.brand-lockup span { font: 700 17px/1 var(--font); letter-spacing: -.01em; color: var(--label); }
 button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: pointer; }
-.nav-new-btn { display: inline-flex; align-items: center; gap: 4px; border: 0; border-radius: 999px; background: rgba(255,255,255,.08); color: #fff; font: 600 13px/1 var(--font); padding: 8px 12px; cursor: pointer; white-space: nowrap; }
-.nav-new-btn:hover { background: rgba(255,255,255,.22); }
+.nav-new-btn { display: inline-flex; align-items: center; gap: 4px; border: 0; border-radius: 999px; background: var(--fill); color: var(--label); font: 600 13px/1 var(--font); padding: 8px 12px; cursor: pointer; white-space: nowrap; }
+.nav-new-btn:hover { background: var(--fill-2); }
 .nav-new-btn svg { width: 14px; height: 14px; }
 /* the hero doubles as the brand surface: a full-bleed navy band with a
    thin gold rule, flush with the nav bar */
 .hero-full {
-  position: relative; overflow: hidden; color: #fff;
-  background: var(--brand-navy);
+  position: relative; overflow: hidden; color: var(--label);
+  background: var(--bg);
 }
 .hero-full-inner { max-width: 720px; margin: 0 auto; padding: 18px 16px 17px; position: relative; z-index: 1; }
 .hero-full .rule { width: 24px; height: 3px; background: var(--brand-gold); border-radius: 2px; margin: 0 0 6px; }
-.large-title { font: var(--tx-title1); letter-spacing: -.01em; margin: 0; color: #fff; }
+.large-title { font: var(--tx-title1); letter-spacing: -.01em; margin: 0; color: var(--label); }
 .hero-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .hero-title-row .days-badge { flex: none; }
-.large-subtitle { font: var(--tx-footnote); color: rgba(255,255,255,.68); margin: 3px 0 0; max-width: 42ch; }
+.large-subtitle { font: var(--tx-footnote); color: var(--label-2); margin: 3px 0 0; max-width: 42ch; }
 /* total-budget roll-up, sitting in the header itself like the hero's
    own "event budget" summary — only shown once someone sets a budget */
 .hero-budget { margin-top: 14px; max-width: 420px; }
 .hero-budget-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; gap: 8px; }
-.hb-label { font: 600 11px/1 var(--font); text-transform: uppercase; letter-spacing: .05em; color: rgba(255,255,255,.6); }
-.hb-amount { font: 700 15px/1 var(--font); color: #fff; font-variant-numeric: tabular-nums; }
-.hero-budget-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.18); overflow: hidden; }
+.hb-label { font: 600 11px/1 var(--font); text-transform: uppercase; letter-spacing: .05em; color: var(--label-2); }
+.hb-amount { font: 700 15px/1 var(--font); color: var(--label); font-variant-numeric: tabular-nums; }
+.hero-budget-bar { height: 6px; border-radius: 3px; background: var(--fill); overflow: hidden; }
 .hero-budget-bar i { display: block; height: 100%; background: var(--brand-gold); border-radius: 3px; }
 .hero-budget-bar i.over { background: #FF6B6B; }
-.hero-budget-caption { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-top: 6px; font: var(--tx-caption1); color: rgba(255,255,255,.65); font-variant-numeric: tabular-nums; }
-.hero-budget-status { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; color: rgba(255,255,255,.9); white-space: nowrap; }
+.hero-budget-caption { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-top: 6px; font: var(--tx-caption1); color: var(--label-2); font-variant-numeric: tabular-nums; }
+.hero-budget-status { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; color: var(--label); white-space: nowrap; }
 .hero-budget-status.over { color: #FFB3B3; }
 /* user menu: a compact avatar in the nav bar, tap to reveal a small
    popover with the signed-in name and Sign Out — replaces an
    always-visible name + text button with a native-feeling control */
 .user-menu { position: relative; }
 .user-avatar-btn { border: 0; background: transparent; padding: 0; cursor: pointer; display: block; border-radius: 50%; }
-.user-avatar { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; overflow: hidden; background: var(--brand-gold); color: var(--brand-navy-deep); font: 700 12px/1 var(--font); box-shadow: 0 0 0 1.5px rgba(255,255,255,.5); }
+.user-avatar { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; overflow: hidden; background: var(--brand-gold); color: var(--brand-navy-deep); font: 700 12px/1 var(--font); box-shadow: 0 0 0 1.5px var(--avatar-ring); }
 .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.user-avatar-btn:hover .user-avatar { box-shadow: 0 0 0 1.5px rgba(255,255,255,.8); }
-.user-avatar-btn[aria-expanded="true"] .user-avatar { box-shadow: 0 0 0 2px var(--brand-navy), 0 0 0 3.5px var(--brand-gold); }
+.user-avatar-btn:hover .user-avatar { box-shadow: 0 0 0 1.5px var(--avatar-ring-hover); }
+.user-avatar-btn[aria-expanded="true"] .user-avatar { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--brand-gold); }
 .user-menu-panel {
   position: absolute; top: calc(100% + 8px); right: 0; min-width: 190px; z-index: 35;
   background: var(--bg-elevated-2);
@@ -286,19 +342,19 @@ button.stat:active { opacity: .55; }
 .status-select:hover { filter: brightness(1.12); }
 .status-select:active { opacity: .7; }
 .status-select[data-s="idea"] {
-  background-color: var(--tint-bg); color: var(--tint);
+  background-color: var(--badge-gold-bg); color: var(--badge-gold-ink);
   background-image:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23EBC673' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z'/%3E%3C/svg%3E"),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23EBC673' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
 }
 .status-select[data-s="bought"] {
-  background-color: var(--green-bg); color: var(--green);
+  background-color: var(--badge-green-bg); color: var(--badge-green-ink);
   background-image:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2330D158' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8h12l-1.2 12.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8zM9 8V6a3 3 0 0 1 6 0v2'/%3E%3C/svg%3E"),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2330D158' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
 }
 .status-select[data-s="wrapped"] { /* wrapped = the mark's gold ribbon */
-  background-color: var(--tint-bg); color: var(--brand-gold-ink);
+  background-color: var(--badge-gold-bg); color: var(--badge-gold-ink);
   background-image:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23EBC673' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 9h16v4H4zM6 13h12v8H6zM12 9v12M8 9a2.2 2.2 0 1 1 4-1.3A2.2 2.2 0 1 1 16 9'/%3E%3C/svg%3E"),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23EBC673' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
@@ -325,7 +381,7 @@ button.stat:active { opacity: .55; }
 
 /* ---------------- sheets (modals) ---------------- */
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; z-index: 40; }
-.modal { background: var(--bg-elevated); border: 1px solid rgba(255,255,255,.1); border-radius: var(--radius-sheet); width: 100%; max-width: 440px; padding: 20px; display: flex; flex-direction: column; gap: 14px; margin-block: auto; box-shadow: var(--shadow-sheet); }
+.modal { background: var(--bg-elevated); border: 1px solid var(--modal-border); border-radius: var(--radius-sheet); width: 100%; max-width: 440px; padding: 20px; display: flex; flex-direction: column; gap: 14px; margin-block: auto; box-shadow: var(--shadow-sheet); }
 .modal h3 { font: var(--tx-title3); margin: 0; color: var(--label); }
 .field { display: flex; flex-direction: column; gap: 4px; }
 .field label { font: var(--tx-footnote); font-weight: 600; color: var(--label-2); }
@@ -566,6 +622,39 @@ const dbase = getFirestore(app);
     p.setAttribute("d", pathData); s.appendChild(p);
     return s;
   }
+
+  /* ---- theme: System (follows OS) / Light / Dark ----
+     The CSS does the actual work via @media(prefers-color-scheme) and
+     a [data-theme] override; this just stores the pick and keeps the
+     browser-chrome theme-color meta in sync. An inline <script> in
+     <head> applies a stored override before first paint so there's no
+     flash when someone has manually chosen a theme. */
+  var THEME_KEY = "wrapsheet-theme";
+  function themePref() {
+    var t = null; try { t = localStorage.getItem(THEME_KEY); } catch (e) {}
+    return (t === "light" || t === "dark") ? t : "system";
+  }
+  function effectiveTheme() {
+    var t = themePref();
+    if (t !== "system") return t;
+    return (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark";
+  }
+  function syncThemeColorMeta() {
+    var meta = document.getElementById("meta-theme-color");
+    if (meta) meta.setAttribute("content", effectiveTheme() === "light" ? "#F2F2F7" : "#0E2745");
+  }
+  function setThemePref(pref) {
+    try { if (pref === "system") localStorage.removeItem(THEME_KEY); else localStorage.setItem(THEME_KEY, pref); } catch (e) {}
+    if (pref === "system") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", pref);
+    syncThemeColorMeta();
+  }
+  syncThemeColorMeta();
+  if (window.matchMedia) {
+    window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", function () {
+      if (themePref() === "system") syncThemeColorMeta();
+    });
+  }
   var ICON_CHEVRON_RIGHT = "M9 18l6-6-6-6";
   var ICON_IDEA = "M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z";
   var ICON_BAG = "M6 8h12l-1.2 12.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8L6 8zM9 8V6a3 3 0 0 1 6 0v2";
@@ -724,8 +813,21 @@ const dbase = getFirestore(app);
     btn.addEventListener("click", function (e) {
       e.stopPropagation();
       if (closeUserMenu) { closeUserMenu(); return; }
+      var themeRow = h("div", { class: "chips", role: "radiogroup", "aria-label": "Appearance", style: "margin: 2px 2px 6px; border-top: 1px solid var(--separator); padding-top: 8px;" });
+      var curPref = themePref();
+      [["system", "Auto"], ["light", "Light"], ["dark", "Dark"]].forEach(function (o) {
+        themeRow.appendChild(h("button", { class: "chip", type: "button", role: "radio", "aria-checked": String(curPref === o[0]), "aria-pressed": String(curPref === o[0]), text: o[1], onclick: function () {
+          setThemePref(o[0]);
+          curPref = o[0];
+          Array.prototype.forEach.call(themeRow.children, function (c, i) {
+            var on = String(["system", "light", "dark"][i] === curPref);
+            c.setAttribute("aria-checked", on); c.setAttribute("aria-pressed", on);
+          });
+        } }));
+      });
       var panel = h("div", { class: "user-menu-panel", role: "menu" },
         h("div", { class: "user-menu-name", text: state.name }),
+        themeRow,
         h("button", { class: "user-menu-item danger", type: "button", role: "menuitem", text: "Sign Out", onclick: function () { signOut(auth); } }));
       wrap.appendChild(panel);
       btn.setAttribute("aria-expanded", "true");
