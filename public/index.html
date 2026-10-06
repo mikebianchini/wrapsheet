@@ -505,10 +505,6 @@ button.stat:active { opacity: .55; }
     <div class="navbar-inner">
       <div class="navbar-leading brand-lockup"><img src="/icons/icon-48.png" alt=""><span>WrapSheet</span></div>
       <div class="navbar-trailing">
-        <button class="nav-new-btn" id="home-new-list" type="button">
-          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-          New List
-        </button>
         <div class="whoami" id="home-whoami"></div>
       </div>
     </div>
@@ -1422,7 +1418,6 @@ const dbase = getFirestore(app);
     }, function (err) { console.error(err); toast("Couldn't duplicate the list."); resetBtn(); });
   }
   $("#create-list").addEventListener("click", createListModal);
-  $("#home-new-list").addEventListener("click", createListModal);
   $("#board-new-list").addEventListener("click", createListModal);
   $("#join-form").addEventListener("submit", function (e) {
     e.preventDefault();
