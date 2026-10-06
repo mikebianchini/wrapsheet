@@ -408,9 +408,6 @@ button.stat:active { opacity: .55; }
 
 
 /* ---------------- home: list of lists ---------------- */
-.join-row { display: flex; gap: 8px; background: var(--fill); border-radius: var(--radius-card); padding: 8px; box-shadow: var(--shadow-card); }
-.join-row input { flex: 1 1 220px; min-width: 0; border: 0; background: var(--field-bg); color: var(--field-ink); border-radius: var(--radius-control); padding: 9px 12px; font: var(--tx-body); }
-.join-row input::placeholder { color: var(--field-ink-2); }
 .lists { background: var(--fill); border-radius: var(--radius-card); box-shadow: var(--shadow-card); overflow: hidden; }
 .list-row { width: 100%; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--separator); padding: 12px 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
 .list-row:last-child { border-bottom: 0; }
@@ -536,11 +533,11 @@ button.stat:active { opacity: .55; }
         <svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
         Create New List
       </button>
+      <button class="btn" id="join-list" type="button">
+        <svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.5 1.5M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.5-1.5"/></svg>
+        Join a List
+      </button>
     </div>
-    <form class="join-row" id="join-form">
-      <input id="join-input" type="text" placeholder="Paste an invite link to join" aria-label="Paste an invite link">
-      <button class="btn" type="submit">Join</button>
-    </form>
     <main id="home-lists"><div class="blank">Loading your lists…</div></main>
     <footer class="brand-foot">WrapSheet — shared gift planning for the people who matter</footer>
   </main>
@@ -1443,6 +1440,32 @@ const dbase = getFirestore(app);
     openModal(form, "l-name");
   }
 
+  function joinListModal() {
+    var link = h("input", { id: "j-link", type: "text", placeholder: "Paste an invite link to join" });
+    var joinBtn = h("button", { class: "btn filled", type: "submit", text: "Join" });
+    var form = h("form", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": "Join a list", onsubmit: function (e) {
+      e.preventDefault();
+      if (joinBtn.disabled) return;
+      var id = joinBoardId(link.value);
+      if (!id) { toast("That doesn't look like a valid invite link."); return; }
+      joinBtn.disabled = true; joinBtn.textContent = "Joining…";
+      getDoc(doc(dbase, "boards", id)).then(function (snap) {
+        if (!snap.exists()) { toast("That list doesn't exist, or the link's wrong."); joinBtn.disabled = false; joinBtn.textContent = "Join"; return; }
+        var data = snap.data();
+        setDoc(doc(dbase, "users", state.uid, "boards", id), { name: data.name || "Untitled list", ownerUid: data.ownerUid || null, joinedAt: Date.now() }).then(function () {
+          closeModal();
+          navigate("/b/" + id);
+        });
+      }, function (err) { console.error(err); toast("Couldn't check that link. Try again."); joinBtn.disabled = false; joinBtn.textContent = "Join"; });
+    } },
+      h("h3", { text: "Join a List" }),
+      field("j-link", "Invite link", link),
+      h("div", { class: "actions" },
+        joinBtn,
+        h("button", { class: "btn", type: "button", text: "Cancel", onclick: closeModal })));
+    openModal(form, "j-link");
+  }
+
   function duplicateBoard(b, btn) {
     function resetBtn() { if (btn) { btn.disabled = false; btn.textContent = "Duplicate"; } }
     getDocs(collection(dbase, "boards", b.id, "people")).then(function (snap) {
@@ -1461,23 +1484,7 @@ const dbase = getFirestore(app);
   }
   $("#create-list").addEventListener("click", createListModal);
   $("#board-new-list").addEventListener("click", createListModal);
-  $("#join-form").addEventListener("submit", function (e) {
-    e.preventDefault();
-    var joinBtn = $("#join-form button[type=submit]");
-    if (joinBtn.disabled) return;
-    var id = joinBoardId($("#join-input").value);
-    if (!id) { toast("That doesn't look like a valid invite link."); return; }
-    joinBtn.disabled = true;
-    getDoc(doc(dbase, "boards", id)).then(function (snap) {
-      if (!snap.exists()) { toast("That list doesn't exist, or the link's wrong."); joinBtn.disabled = false; return; }
-      var data = snap.data();
-      setDoc(doc(dbase, "users", state.uid, "boards", id), { name: data.name || "Untitled list", ownerUid: data.ownerUid || null, joinedAt: Date.now() }).then(function () {
-        $("#join-input").value = "";
-        joinBtn.disabled = false;
-        navigate("/b/" + id);
-      });
-    }, function (err) { console.error(err); toast("Couldn't check that link. Try again."); joinBtn.disabled = false; });
-  });
+  $("#join-list").addEventListener("click", joinListModal);
   $("#back-home").addEventListener("click", function () { navigate("/"); });
 
   /* ---- router ---- */
