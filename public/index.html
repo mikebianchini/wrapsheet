@@ -180,7 +180,7 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 .days-badge b { font: 700 13px/1 var(--font); }
 
 /* ---------------- buttons ---------------- */
-.btn { border: 0; background: var(--fill); border-radius: var(--radius-control); padding: 8px 14px; cursor: pointer; font: var(--tx-subhead); font-weight: 600; color: var(--tint); }
+.btn { border: 0; background: var(--fill); border-radius: var(--radius-control); padding: 8px 14px; cursor: pointer; font: var(--tx-subhead); font-weight: 600; color: var(--tint); display: inline-flex; align-items: center; gap: 6px; }
 .btn:hover { background: var(--fill-2); }
 .btn.filled { background: var(--tint); color: var(--on-tint); }
 .btn.filled:hover { filter: brightness(1.06); }
@@ -201,7 +201,10 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 
 /* summary stats — plain grouped row, no card chrome competing with content */
 .stats { display: flex; background: var(--fill); border-radius: var(--radius-card); box-shadow: var(--shadow-card); overflow: hidden; }
-.stat { flex: 1 1 0; padding: 10px 8px; display: flex; flex-direction: column; align-items: center; gap: 1px; border-inline-start: 1px solid var(--separator); }
+.stat { flex: 1 1 0; padding: 10px 8px; display: flex; flex-direction: column; align-items: center; gap: 1px; border: 0; border-inline-start: 1px solid var(--separator); background: transparent; font: inherit; }
+button.stat { cursor: pointer; }
+button.stat:hover { background: var(--fill-2); }
+button.stat:active { opacity: .55; }
 .stat:first-child { border-inline-start: 0; }
 .stat .k { display: inline-flex; align-items: center; gap: 4px; font: var(--tx-caption1); text-transform: uppercase; letter-spacing: .03em; color: var(--label-2); }
 .stat .k svg { width: 12px; height: 12px; flex: none; }
@@ -468,13 +471,16 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
   <main class="wrap">
     <div id="banner"></div>
 
+    <section class="stats" id="stats" aria-label="Summary"></section>
+
     <div class="bar">
       <span class="spacer"></span>
       <button class="btn" id="add-person" type="button">Add Recipient</button>
-      <button class="btn filled" id="add-gift" type="button">Add Gift</button>
+      <button class="btn filled" id="add-gift" type="button">
+        <svg class="svg-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16v4H4zM6 13h12v8H6zM12 9v12M8 9a2.2 2.2 0 1 1 4-1.3A2.2 2.2 0 1 1 16 9"/></svg>
+        Add Gift
+      </button>
     </div>
-
-    <section class="stats" id="stats" aria-label="Summary"></section>
 
     <div class="view-tabs" id="view-tabs" role="tablist" aria-label="View"></div>
 
@@ -849,12 +855,25 @@ const dbase = getFirestore(app);
       if (x.status !== "idea" && x.price) spent += x.price;
     });
     var budget = state.people.reduce(function (s, p) { return s + (p.budget || 0); }, 0);
-    function stat(icon, k, v, small) { return h("div", { class: "stat" }, h("span", { class: "k" }, svg(icon), k), h("span", { class: "v" }, String(v), small ? h("small", { text: small }) : null)); }
+    function stat(icon, k, v, small, onClick) {
+      var attrs = { class: "stat" };
+      if (onClick) { attrs.type = "button"; attrs.onclick = onClick; }
+      return h(onClick ? "button" : "div", attrs, h("span", { class: "k" }, svg(icon), k), h("span", { class: "v" }, String(v), small ? h("small", { text: small }) : null));
+    }
     var box = $("#stats"); box.textContent = "";
-    box.appendChild(stat(ICON_IDEA, "Ideas", ideas));
-    box.appendChild(stat(ICON_BAG, "Bought", bought));
-    box.appendChild(stat(ICON_GIFT, "Wrapped", wrapped));
+    box.appendChild(stat(ICON_IDEA, "Ideas", ideas, null, function () { goToStatus("idea"); }));
+    box.appendChild(stat(ICON_BAG, "Bought", bought, null, function () { goToStatus("bought"); }));
+    box.appendChild(stat(ICON_GIFT, "Wrapped", wrapped, null, function () { goToStatus("wrapped"); }));
     box.appendChild(stat(ICON_DOLLAR, "Spent", money(spent), budget ? " of " + money(budget) : ""));
+  }
+  function goToStatus(status) {
+    state.view = "gifts";
+    state.expandedStatus = { idea: status === "idea", bought: status === "bought", wrapped: status === "wrapped" };
+    render();
+    requestAnimationFrame(function () {
+      var el = document.querySelector('.accordion-section[data-status="' + status + '"]');
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   }
 
   /* board-level "total budget" roll-up in the hero — mirrors the
@@ -904,7 +923,7 @@ const dbase = getFirestore(app);
       var list = gifts.filter(function (g) { return (g.status || "idea") === s; })
         .sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
       var expanded = state.expandedStatus[s] !== false;
-      var section = h("article", { class: "accordion-section" });
+      var section = h("article", { class: "accordion-section", "data-status": s });
       var chevron = svg(ICON_CHEVRON_RIGHT);
       chevron.setAttribute("class", "svg-icon acc-chevron");
       var statusIcon = svg(STATUS_ICON[s]);
