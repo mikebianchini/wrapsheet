@@ -43,6 +43,12 @@
   --tint: var(--brand-gold);
   --tint-bg: rgba(235,198,115,.16);
   --on-tint: #241804;
+  /* gold used AS TEXT/icon/outline color directly on the page canvas
+     (links, outline-button labels, focus rings) needs more contrast
+     than the raw brand gold gives once the canvas goes light — --tint
+     itself stays the bright brand color for filled buttons and badges,
+     where it sits as a solid fill with dark text on top instead */
+  --tint-ink: var(--tint);
 
   /* labels — light text by default (dark theme); the light theme block
      below swaps these to dark-on-light */
@@ -104,6 +110,7 @@
     --shadow-sheet: 0 2px 8px rgba(0,0,0,.1), 0 20px 40px -20px rgba(0,0,0,.2);
     --badge-gold-bg: rgba(193,147,43,.16); --badge-gold-ink: #8A5F0D;
     --badge-green-bg: rgba(52,199,89,.16); --badge-green-ink: #1F8A3D;
+    --tint-ink: #8A5F0D;
     color-scheme: light;
   }
 }
@@ -119,6 +126,7 @@
   --shadow-sheet: 0 2px 8px rgba(0,0,0,.1), 0 20px 40px -20px rgba(0,0,0,.2);
   --badge-gold-bg: rgba(193,147,43,.16); --badge-gold-ink: #8A5F0D;
   --badge-green-bg: rgba(52,199,89,.16); --badge-green-ink: #1F8A3D;
+  --tint-ink: #8A5F0D;
   color-scheme: light;
 }
 
@@ -129,11 +137,11 @@ body {
   padding-block-end: max(32px, env(safe-area-inset-bottom));
 }
 button, input, select, textarea { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--tint); outline-offset: 2px; border-radius: 6px; }
+:focus-visible { outline: 2px solid var(--tint-ink); outline-offset: 2px; border-radius: 6px; }
 [hidden] { display: none !important; }
 img { max-width: 100%; }
 ::selection { background: var(--tint-bg); color: var(--label); }
-a { color: var(--tint); }
+a { color: var(--tint-ink); }
 @media (prefers-reduced-motion: no-preference) {
   .btn, .icon-btn, .list-row, .gift, .chip { transition: opacity .15s var(--ease), background-color .15s var(--ease), box-shadow .15s var(--ease); }
   .btn:active, .icon-btn:active, .list-row:active, .g-btn:active, .chip:active { opacity: .55; }
@@ -235,7 +243,7 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 .days-badge b { font: 700 13px/1 var(--font); }
 
 /* ---------------- buttons ---------------- */
-.btn { border: 0; background: var(--fill); border-radius: var(--radius-control); padding: 8px 14px; cursor: pointer; font: var(--tx-subhead); font-weight: 600; color: var(--tint); display: inline-flex; align-items: center; gap: 6px; }
+.btn { border: 0; background: var(--fill); border-radius: var(--radius-control); padding: 8px 14px; cursor: pointer; font: var(--tx-subhead); font-weight: 600; color: var(--tint-ink); display: inline-flex; align-items: center; gap: 6px; }
 .btn:hover { background: var(--fill-2); }
 .btn.filled { background: var(--tint); color: var(--on-tint); }
 .btn.filled:hover { filter: brightness(1.06); }
@@ -280,13 +288,13 @@ button.stat:active { opacity: .55; }
 .view-tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--separator); }
 .view-tab { border: 0; background: transparent; padding: 4px 2px 10px; font: var(--tx-subhead); font-weight: 600; color: var(--label-2); cursor: pointer; position: relative; display: inline-flex; align-items: center; gap: 6px; }
 .view-tab svg { width: 15px; height: 15px; flex: none; }
-.view-tab[aria-selected="true"] { color: var(--tint); }
-.view-tab[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; border-radius: 1px; background: var(--tint); }
+.view-tab[aria-selected="true"] { color: var(--tint-ink); }
+.view-tab[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; border-radius: 1px; background: var(--tint-ink); }
 
 /* status-grouped accordion sections (Gifts tab) */
 .accordion-section { background: var(--fill); border-radius: var(--radius-card); overflow: hidden; box-shadow: var(--shadow-card); }
 .accordion-header { width: 100%; display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: transparent; border: 0; cursor: pointer; font: var(--tx-title3); color: var(--label); text-align: left; }
-.accordion-header .acc-icon { flex: none; width: 18px; height: 18px; color: var(--tint); }
+.accordion-header .acc-icon { flex: none; width: 18px; height: 18px; color: var(--tint-ink); }
 .accordion-header .acc-count { font: var(--tx-footnote); font-weight: 600; color: var(--label-2); }
 .accordion-header .acc-chevron { margin-left: auto; color: var(--label-2); flex: none; width: 16px; height: 16px; transition: transform .15s var(--ease); transform: rotate(90deg); }
 .accordion-header[aria-expanded="false"] .acc-chevron { transform: rotate(0deg); }
@@ -425,7 +433,7 @@ button.stat:active { opacity: .55; }
   border-radius: 50%; background: var(--bg-elevated); box-shadow: var(--shadow-card);
   display: flex; align-items: center; justify-content: center; z-index: 50; opacity: 0; pointer-events: none;
   transform: translateY(-60px); }
-.ptr svg { width: 16px; height: 16px; stroke: var(--tint); }
+.ptr svg { width: 16px; height: 16px; stroke: var(--tint-ink); }
 .ptr.busy svg { animation: ptr-spin .8s linear infinite; }
 @keyframes ptr-spin { to { transform: rotate(360deg); } }
 </style>
