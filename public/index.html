@@ -203,6 +203,8 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 .quick input { flex: 1 1 220px; min-width: 0; border: 0; background: var(--field-bg); color: var(--field-ink); border-radius: var(--radius-control); padding: 9px 12px; font: var(--tx-body); }
 .quick select { flex: 0 1 140px; min-width: 0; border: 0; background: var(--field-bg); color: var(--field-ink); border-radius: var(--radius-control); padding: 9px 10px; font: var(--tx-subhead); }
 .quick input::placeholder { color: var(--field-ink-2); }
+.quick-hint { margin: -6px 0 0; font: var(--tx-footnote); color: var(--label-2); }
+.link-btn { display: inline; background: transparent; border: 0; padding: 0; margin: 0; font: inherit; color: var(--tint); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 
 /* summary stats — plain grouped row, no card chrome competing with content */
 .stats { display: flex; background: var(--fill); border-radius: var(--radius-card); box-shadow: var(--shadow-card); overflow: hidden; }
@@ -473,17 +475,17 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
   <main class="wrap">
     <div id="banner"></div>
 
-    <div class="bar">
-      <span class="spacer"></span>
-      <button class="btn" id="add-person" type="button">Add Recipient</button>
-      <button class="btn filled" id="add-gift" type="button">Add Gift</button>
-    </div>
-
     <form class="quick" id="quick" hidden>
       <input id="q-link" type="text" placeholder="Paste a product link or type an idea" aria-label="Paste a product link or type an idea" autocomplete="off">
       <select id="q-person" aria-label="Who is it for"></select>
       <button class="btn filled" type="submit">Add</button>
     </form>
+    <p class="quick-hint" id="quick-hint" hidden>Fastest way to add a gift idea. Setting a price or marking it bought right away? <button class="link-btn" type="button" id="add-gift">Open the full form</button>.</p>
+
+    <div class="bar">
+      <span class="spacer"></span>
+      <button class="btn plain" id="add-person" type="button">Add Recipient</button>
+    </div>
 
     <section class="stats" id="stats" aria-label="Summary"></section>
 
@@ -813,7 +815,7 @@ const dbase = getFirestore(app);
     var budget = h("input", { id: "p-budget", type: "number", min: "0", step: "1", inputmode: "decimal", placeholder: "Optional", value: person.budget != null ? person.budget : "" });
     var prefs = h("textarea", { id: "p-notes", maxlength: "300", placeholder: "Sizes, favorite colors, allergies, wish-list notes..." }, person.notes || "");
     var confirmDel = false;
-    var del = editing ? h("button", { class: "btn danger plain", type: "button", text: "Delete Person", onclick: function (e) {
+    var del = editing ? h("button", { class: "btn danger plain", type: "button", text: "Delete Recipient", onclick: function (e) {
       if (!confirmDel) { confirmDel = true; var n = personGifts(person.id).length; e.target.textContent = n ? "Tap again to delete with " + n + " gift" + (n > 1 ? "s" : "") : "Tap again to delete"; return; }
       var pid = person.id, personSnap = Object.assign({}, person);
       var giftsSnap = personGifts(pid).map(function (g) { return Object.assign({}, g); });
@@ -830,7 +832,7 @@ const dbase = getFirestore(app);
       });
       closeModal();
     } }) : null;
-    var form = h("form", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": editing ? "Edit person" : "Add person", onsubmit: function (e) {
+    var form = h("form", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": editing ? "Edit recipient" : "Add recipient", onsubmit: function (e) {
       e.preventDefault();
       var n = name.value.trim(); if (!n) { name.focus(); return; }
       var data = { name: n, group: grp.value, budget: num(budget.value), notes: prefs.value.trim() };
@@ -842,7 +844,7 @@ const dbase = getFirestore(app);
       });
       closeModal();
     } },
-      h("h3", { text: editing ? "Edit Person" : "Add Recipient" }),
+      h("h3", { text: editing ? "Edit Recipient" : "Add Recipient" }),
       field("p-name", "Name", name),
       h("div", { class: "row2" }, field("p-group", "Group", grp), field("p-budget", "Budget (USD)", budget)),
       field("p-notes", "Gift preferences (optional)", prefs),
@@ -1025,6 +1027,7 @@ const dbase = getFirestore(app);
     if (state.error) banner.appendChild(h("div", { class: "notice", text: state.error }));
     $("#invite").hidden = !!state.error;
     $("#quick").hidden = !!state.error;
+    $("#quick-hint").hidden = !!state.error;
     fillQuickPeople(); fillPersonFilter();
     renderStats(); renderHeroBudget(); renderChips(); renderViewTabs();
     var app = $("#app"); app.textContent = "";
@@ -1142,7 +1145,8 @@ const dbase = getFirestore(app);
       if (snap.empty) { list.appendChild(h("li", { text: "Nothing yet — activity shows up here as people add and update gifts." })); return; }
       snap.docs.forEach(function (d) {
         var a = d.data();
-        list.appendChild(h("li", {}, a.text || "", h("div", { class: "when", text: timeAgo(a.createdAt) })));
+        var when = timeAgo(a.createdAt);
+        list.appendChild(h("li", {}, a.text || "Activity", when ? h("div", { class: "when", text: when }) : null));
       });
     }, function (e) { console.error(e); list.textContent = ""; list.appendChild(h("li", { text: "Couldn't load activity." })); });
   }
@@ -1200,7 +1204,11 @@ const dbase = getFirestore(app);
         } }));
       }
       var chev = svg(ICON_CHEVRON_RIGHT); chev.setAttribute("class", "chevron");
-      var row = h("button", { class: "list-row", type: "button", "aria-label": "Open " + (b.name || "list"), onclick: function () { navigate("/b/" + b.id); } },
+      var open = function () { navigate("/b/" + b.id); };
+      var row = h("div", { class: "list-row", role: "button", tabindex: "0", "aria-label": "Open " + (b.name || "list"), onclick: open, onkeydown: function (e) {
+        if (e.target !== e.currentTarget) return;
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
+      } },
         h("div", { class: "list-row-main" },
           h("h3", { text: b.name || "Untitled list" }),
           h("div", { class: "role", text: b.ownerUid === state.uid ? "You created this" : "Shared with you" })),
