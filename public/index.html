@@ -385,6 +385,8 @@ button.stat:active { opacity: .55; }
 .g-link svg { width: 11px; height: 11px; flex: none; }
 .g-link span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .g-link:hover, .g-link:focus-visible { text-decoration: underline; }
+.g-link-status { margin-top: 6px; font: var(--tx-caption1); color: var(--label-2); }
+.g-link-status.error { color: var(--red); }
 .g-side { text-align: right; display: flex; align-items: center; gap: 6px; flex: none; }
 .g-price { flex: none; font: var(--tx-subhead); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--label); white-space: nowrap; }
 
@@ -988,23 +990,39 @@ const dbase = getFirestore(app);
       linkHost.hidden = !u;
       linkHost.lastChild.textContent = hostFor(u) ? "Opens " + hostFor(u) : "Opens link";
     });
+    var fetchStatus = h("div", { class: "g-link-status", hidden: true });
     var urlRow = h("div", {},
       h("div", { style: "display:flex; align-items:center; gap:6px;" }, url, openLink),
-      linkHost);
+      linkHost, fetchStatus);
     var notes = h("textarea", { id: "g-notes", maxlength: "500", placeholder: "Size, color, where you saw it" }, gift.notes || "");
     var pendingImage = gift.imageUrl || "";
     var thumbPreview = h("img", { class: "modal-thumb", alt: "", src: pendingImage, hidden: !pendingImage, onerror: function () { thumbPreview.hidden = true; } });
     function setPreview(src) { pendingImage = src || ""; thumbPreview.src = pendingImage; thumbPreview.hidden = !pendingImage; }
-    url.addEventListener("blur", function () {
+    var fetchToken = 0;
+    function autofillFromLink() {
       var u = safeUrl(url.value);
       if (!u || (title.value.trim() && pendingImage && price.value)) return;
+      var token = ++fetchToken;
+      fetchStatus.hidden = false;
+      fetchStatus.classList.remove("error");
+      fetchStatus.textContent = "Fetching product details…";
       fetchLinkMeta(u).then(function (meta) {
-        if (!meta) return;
-        if (!title.value.trim() && meta.title) title.value = meta.title;
-        if (meta.image) setPreview(meta.image);
-        if (!price.value && meta.price != null) price.value = meta.price;
+        if (token !== fetchToken) return;
+        if (!meta) {
+          fetchStatus.textContent = "Couldn't pull details from that link — fill them in manually.";
+          fetchStatus.classList.add("error");
+          return;
+        }
+        var filled = [];
+        if (!title.value.trim() && meta.title) { title.value = meta.title; filled.push("title"); }
+        if (meta.image) { setPreview(meta.image); filled.push("photo"); }
+        if (!price.value && meta.price != null) { price.value = meta.price; filled.push("price"); }
+        fetchStatus.hidden = !filled.length;
+        if (filled.length) fetchStatus.textContent = "Filled in " + filled.join(", ") + " from the link.";
       });
-    });
+    }
+    url.addEventListener("blur", autofillFromLink);
+    url.addEventListener("paste", function () { setTimeout(autofillFromLink, 30); });
     var confirmDel = false;
     var del = editing ? h("button", { class: "btn danger plain", type: "button", text: "Delete", onclick: function (e) {
       if (!confirmDel) { confirmDel = true; e.target.textContent = "Tap again to delete"; return; }
