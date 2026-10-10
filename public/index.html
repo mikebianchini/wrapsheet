@@ -1035,7 +1035,7 @@ const dbase = getFirestore(app);
         h("button", { class: "btn filled", type: "submit", text: editing ? "Save" : "Add Gift" }),
         h("button", { class: "btn", type: "button", text: "Cancel", onclick: closeModal }),
         h("span", { class: "spacer" }), del));
-    openModal(form, "g-title");
+    openModal(form, editing ? null : "g-title");
   }
 
   function personModal(person) {
