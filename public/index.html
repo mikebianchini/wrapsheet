@@ -385,8 +385,11 @@ button.stat:active { opacity: .55; }
 .g-link svg { width: 11px; height: 11px; flex: none; }
 .g-link span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .g-link:hover, .g-link:focus-visible { text-decoration: underline; }
-.g-link-status { margin-top: 6px; font: var(--tx-caption1); color: var(--label-2); }
-.g-link-status.error { color: var(--red); }
+.link-banner { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-control); background: var(--fill); color: var(--label); font: var(--tx-subhead); font-weight: 600; margin-bottom: 4px; }
+.link-banner svg { width: 17px; height: 17px; flex: none; }
+.link-banner .spinner { width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--label-3); border-top-color: var(--tint-ink); flex: none; animation: ptr-spin .8s linear infinite; }
+.link-banner.success { background: var(--tint-bg); color: var(--tint-ink); }
+.link-banner.error { background: rgba(255,69,58,.12); color: var(--red); }
 .g-side { text-align: right; display: flex; align-items: center; gap: 6px; flex: none; }
 .g-price { flex: none; font: var(--tx-subhead); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--label); white-space: nowrap; }
 
@@ -748,6 +751,8 @@ const dbase = getFirestore(app);
   var ICON_THEME_DARK = "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z";
   var ICON_SIGN_OUT = "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9";
   var ICON_EXTERNAL = "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3";
+  var ICON_CHECK = "M20 6L9 17l-5-5";
+  var ICON_ALERT = "M12 9v4M12 17h.01M10.3 3.9L2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z";
   var STATUS_ICON = { idea: ICON_IDEA, bought: ICON_BAG, wrapped: ICON_GIFT };
   var CHIP_ICON = { all: ICON_LIST, idea: ICON_IDEA, bought: ICON_BAG, wrapped: ICON_GIFT };
 
@@ -990,35 +995,37 @@ const dbase = getFirestore(app);
       linkHost.hidden = !u;
       linkHost.lastChild.textContent = hostFor(u) ? "Opens " + hostFor(u) : "Opens link";
     });
-    var fetchStatus = h("div", { class: "g-link-status", hidden: true });
     var urlRow = h("div", {},
       h("div", { style: "display:flex; align-items:center; gap:6px;" }, url, openLink),
-      linkHost, fetchStatus);
+      linkHost);
     var notes = h("textarea", { id: "g-notes", maxlength: "500", placeholder: "Size, color, where you saw it" }, gift.notes || "");
     var pendingImage = gift.imageUrl || "";
     var thumbPreview = h("img", { class: "modal-thumb", alt: "", src: pendingImage, hidden: !pendingImage, onerror: function () { thumbPreview.hidden = true; } });
     function setPreview(src) { pendingImage = src || ""; thumbPreview.src = pendingImage; thumbPreview.hidden = !pendingImage; }
+    var linkBanner = h("div", { class: "link-banner", hidden: true });
+    function setLinkBanner(kind, text) {
+      linkBanner.hidden = false;
+      linkBanner.className = "link-banner" + (kind === "success" ? " success" : kind === "error" ? " error" : "");
+      linkBanner.textContent = "";
+      if (kind === "loading") linkBanner.appendChild(h("span", { class: "spinner", "aria-hidden": "true" }));
+      else linkBanner.appendChild(svg(kind === "success" ? ICON_CHECK : ICON_ALERT));
+      linkBanner.appendChild(h("span", { text: text }));
+    }
     var fetchToken = 0;
     function autofillFromLink() {
       var u = safeUrl(url.value);
       if (!u || (title.value.trim() && pendingImage && price.value)) return;
       var token = ++fetchToken;
-      fetchStatus.hidden = false;
-      fetchStatus.classList.remove("error");
-      fetchStatus.textContent = "Fetching product details…";
+      setLinkBanner("loading", "Fetching product details from the link…");
       fetchLinkMeta(u).then(function (meta) {
         if (token !== fetchToken) return;
-        if (!meta) {
-          fetchStatus.textContent = "Couldn't pull details from that link — fill them in manually.";
-          fetchStatus.classList.add("error");
-          return;
-        }
+        if (!meta) { setLinkBanner("error", "Couldn't pull details from that link — fill them in manually."); return; }
         var filled = [];
         if (!title.value.trim() && meta.title) { title.value = meta.title; filled.push("title"); }
         if (meta.image) { setPreview(meta.image); filled.push("photo"); }
         if (!price.value && meta.price != null) { price.value = meta.price; filled.push("price"); }
-        fetchStatus.hidden = !filled.length;
-        if (filled.length) fetchStatus.textContent = "Filled in " + filled.join(", ") + " from the link.";
+        if (filled.length) setLinkBanner("success", "Filled in " + filled.join(", ") + " from the link.");
+        else linkBanner.hidden = true;
       });
     }
     url.addEventListener("blur", autofillFromLink);
@@ -1058,6 +1065,7 @@ const dbase = getFirestore(app);
       closeModal();
     } },
       h("h3", { text: editing ? "Edit Gift" : "Add Gift" }),
+      linkBanner,
       thumbPreview,
       field("g-person", "For", sel),
       field("g-title", "Gift", title),
