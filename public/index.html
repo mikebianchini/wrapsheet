@@ -385,6 +385,7 @@ button.stat:active { opacity: .55; }
 .g-link svg { width: 11px; height: 11px; flex: none; }
 .g-link span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .g-link:hover, .g-link:focus-visible { text-decoration: underline; }
+.field-tip { margin-top: 6px; font: var(--tx-caption1); color: var(--label-2); }
 .link-banner { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-control); background: var(--fill); color: var(--label); font: var(--tx-subhead); font-weight: 600; margin-bottom: 4px; }
 .link-banner svg { width: 17px; height: 17px; flex: none; }
 .link-banner .spinner { width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--label-3); border-top-color: var(--tint-ink); flex: none; animation: ptr-spin .8s linear infinite; }
@@ -987,6 +988,7 @@ const dbase = getFirestore(app);
     var openLink = h("a", { class: "icon-btn", style: "flex:none; background:var(--fill);", href: gift.url || "#", target: "_blank", rel: "noopener noreferrer", "aria-label": "Open link", "data-tip": "Open link", hidden: !gift.url }, svg(ICON_EXTERNAL));
     var linkHost = h("a", { class: "g-link", style: "margin-top:6px;", href: gift.url || "#", target: "_blank", rel: "noopener noreferrer", hidden: !gift.url },
       svg(ICON_EXTERNAL), h("span", { text: hostFor(gift.url) ? "Opens " + hostFor(gift.url) : "Opens link" }));
+    var linkTip = h("div", { class: "field-tip", hidden: !!gift.url, text: "Paste a product link and we'll try to fill in the title, photo, and price." });
     url.addEventListener("input", function () {
       var u = safeUrl(url.value);
       openLink.href = u || "#";
@@ -994,10 +996,11 @@ const dbase = getFirestore(app);
       linkHost.href = u || "#";
       linkHost.hidden = !u;
       linkHost.lastChild.textContent = hostFor(u) ? "Opens " + hostFor(u) : "Opens link";
+      linkTip.hidden = !!u;
     });
     var urlRow = h("div", {},
       h("div", { style: "display:flex; align-items:center; gap:6px;" }, url, openLink),
-      linkHost);
+      linkHost, linkTip);
     var notes = h("textarea", { id: "g-notes", maxlength: "500", placeholder: "Size, color, where you saw it" }, gift.notes || "");
     var pendingImage = gift.imageUrl || "";
     var thumbPreview = h("img", { class: "modal-thumb", alt: "", src: pendingImage, hidden: !pendingImage, onerror: function () { thumbPreview.hidden = true; } });
@@ -1066,17 +1069,17 @@ const dbase = getFirestore(app);
     } },
       h("h3", { text: editing ? "Edit Gift" : "Add Gift" }),
       linkBanner,
+      field("g-url", "Link", urlRow),
       thumbPreview,
       field("g-person", "For", sel),
       field("g-title", "Gift", title),
       h("div", { class: "row2" }, field("g-price", "Price (USD)", price), field("g-status", "Status", st)),
-      field("g-url", "Link", urlRow),
       field("g-notes", "Notes", notes),
       h("div", { class: "actions" },
         h("button", { class: "btn filled", type: "submit", text: editing ? "Save" : "Add Gift" }),
         h("button", { class: "btn", type: "button", text: "Cancel", onclick: closeModal }),
         h("span", { class: "spacer" }), del));
-    openModal(form, editing ? null : "g-title");
+    openModal(form, editing ? null : "g-url");
   }
 
   function personModal(person) {
