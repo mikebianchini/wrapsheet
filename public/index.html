@@ -368,6 +368,13 @@ button.stat:active { opacity: .55; }
 .g-thumb { width: 44px; height: 44px; border-radius: 7px; object-fit: cover; background: var(--bg-elevated-2); flex: none; }
 .g-thumb-fallback { width: 44px; height: 44px; border-radius: 7px; background: var(--bg-elevated-2); flex: none; display: grid; place-items: center; color: var(--label-3); }
 .g-thumb-fallback svg { width: 20px; height: 20px; }
+.g-thumb-link { position: relative; flex: none; display: block; border-radius: 7px; }
+.g-thumb-link::after {
+  content: ""; position: absolute; right: -3px; bottom: -3px; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--tint); box-shadow: 0 0 0 2px var(--bg-elevated-2);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3'/%3E%3C/svg%3E") center / 9px 9px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3'/%3E%3C/svg%3E") center / 9px 9px no-repeat;
+}
 .g-main { min-width: 0; flex: 1; }
 .g-title-row { display: flex; align-items: baseline; gap: 8px; }
 .g-title { min-width: 0; font: var(--tx-body); overflow-wrap: anywhere; color: var(--label); }
@@ -734,6 +741,7 @@ const dbase = getFirestore(app);
   var ICON_THEME_LIGHT = "M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42";
   var ICON_THEME_DARK = "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z";
   var ICON_SIGN_OUT = "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9";
+  var ICON_EXTERNAL = "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3";
   var STATUS_ICON = { idea: ICON_IDEA, bought: ICON_BAG, wrapped: ICON_GIFT };
   var CHIP_ICON = { all: ICON_LIST, idea: ICON_IDEA, bought: ICON_BAG, wrapped: ICON_GIFT };
 
@@ -960,7 +968,14 @@ const dbase = getFirestore(app);
     STATUS.forEach(function (s) { var o = h("option", { value: s, text: LABEL[s] }); if (s === (gift.status || "idea")) o.selected = true; st.appendChild(o); });
     var title = h("input", { id: "g-title", type: "text", maxlength: "120", placeholder: "Lego Technic set", value: gift.title || "" });
     var price = h("input", { id: "g-price", type: "number", min: "0", step: "0.01", inputmode: "decimal", placeholder: "0", value: gift.price != null ? gift.price : "" });
-    var url = h("input", { id: "g-url", type: "text", maxlength: "500", placeholder: "amazon.com/...", value: gift.url || "" });
+    var url = h("input", { id: "g-url", type: "text", maxlength: "500", placeholder: "amazon.com/...", value: gift.url || "", style: "flex:1; min-width:0;" });
+    var openLink = h("a", { class: "icon-btn", style: "flex:none; background:var(--fill);", href: gift.url || "#", target: "_blank", rel: "noopener noreferrer", "aria-label": "Open link", "data-tip": "Open link", hidden: !gift.url }, svg(ICON_EXTERNAL));
+    url.addEventListener("input", function () {
+      var u = safeUrl(url.value);
+      openLink.href = u || "#";
+      openLink.hidden = !u;
+    });
+    var urlRow = h("div", { style: "display:flex; align-items:center; gap:6px;" }, url, openLink);
     var notes = h("textarea", { id: "g-notes", maxlength: "500", placeholder: "Size, color, where you saw it" }, gift.notes || "");
     var pendingImage = gift.imageUrl || "";
     var thumbPreview = h("img", { class: "modal-thumb", alt: "", src: pendingImage, hidden: !pendingImage, onerror: function () { thumbPreview.hidden = true; } });
@@ -1014,7 +1029,7 @@ const dbase = getFirestore(app);
       field("g-person", "For", sel),
       field("g-title", "Gift", title),
       h("div", { class: "row2" }, field("g-price", "Price (USD)", price), field("g-status", "Status", st)),
-      field("g-url", "Link", url),
+      field("g-url", "Link", urlRow),
       field("g-notes", "Notes", notes),
       h("div", { class: "actions" },
         h("button", { class: "btn filled", type: "submit", text: editing ? "Save" : "Add Gift" }),
@@ -1194,6 +1209,9 @@ const dbase = getFirestore(app);
     var thumb = g.imageUrl
       ? h("img", { class: "g-thumb", src: g.imageUrl, alt: "", loading: "lazy", onerror: function (e) { e.target.replaceWith(fallbackThumb()); } })
       : fallbackThumb();
+    if (g.url) {
+      thumb = h("a", { class: "g-thumb-link", href: g.url, target: "_blank", rel: "noopener noreferrer", "aria-label": "Open " + (g.title || "gift") + " link", "data-tip": "Open link", onclick: function (e) { e.stopPropagation(); } }, thumb);
+    }
     return h("li", { class: "gift" },
       h("div", { class: "g-main" }, h("div", { class: "g-line" }, thumb,
         h("div", { style: "min-width:0; flex:1;" },
