@@ -381,6 +381,10 @@ button.stat:active { opacity: .55; }
 .g-title-btn { display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; text-decoration-color: var(--label-3); text-underline-offset: 3px; }
 .g-note { color: var(--label-2); font: var(--tx-footnote); overflow-wrap: anywhere; margin-top: 1px; }
 .g-meta { color: var(--label-2); font: var(--tx-caption1); margin-top: 2px; }
+.g-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 3px; color: var(--tint-ink); font: var(--tx-caption1); font-weight: 600; text-decoration: none; }
+.g-link svg { width: 11px; height: 11px; flex: none; }
+.g-link span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.g-link:hover, .g-link:focus-visible { text-decoration: underline; }
 .g-side { text-align: right; display: flex; align-items: center; gap: 6px; flex: none; }
 .g-price { flex: none; font: var(--tx-subhead); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--label); white-space: nowrap; }
 
@@ -755,6 +759,10 @@ const dbase = getFirestore(app);
     if (!/^https?:\/\//i.test(u)) u = "https://" + u;
     try { var p = new URL(u); return /^https?:$/.test(p.protocol) ? p.href : ""; } catch (e) { return ""; }
   }
+  function hostFor(u) {
+    if (!u) return "";
+    try { return new URL(u).hostname.replace(/^www\./, ""); } catch (e) { return ""; }
+  }
   function toast(msg, opts) {
     opts = opts || {};
     var t = $("#toast"); t.textContent = "";
@@ -970,12 +978,19 @@ const dbase = getFirestore(app);
     var price = h("input", { id: "g-price", type: "number", min: "0", step: "0.01", inputmode: "decimal", placeholder: "0", value: gift.price != null ? gift.price : "" });
     var url = h("input", { id: "g-url", type: "text", maxlength: "500", placeholder: "amazon.com/...", value: gift.url || "", style: "flex:1; min-width:0;" });
     var openLink = h("a", { class: "icon-btn", style: "flex:none; background:var(--fill);", href: gift.url || "#", target: "_blank", rel: "noopener noreferrer", "aria-label": "Open link", "data-tip": "Open link", hidden: !gift.url }, svg(ICON_EXTERNAL));
+    var linkHost = h("a", { class: "g-link", style: "margin-top:6px;", href: gift.url || "#", target: "_blank", rel: "noopener noreferrer", hidden: !gift.url },
+      svg(ICON_EXTERNAL), h("span", { text: hostFor(gift.url) ? "Opens " + hostFor(gift.url) : "Opens link" }));
     url.addEventListener("input", function () {
       var u = safeUrl(url.value);
       openLink.href = u || "#";
       openLink.hidden = !u;
+      linkHost.href = u || "#";
+      linkHost.hidden = !u;
+      linkHost.lastChild.textContent = hostFor(u) ? "Opens " + hostFor(u) : "Opens link";
     });
-    var urlRow = h("div", { style: "display:flex; align-items:center; gap:6px;" }, url, openLink);
+    var urlRow = h("div", {},
+      h("div", { style: "display:flex; align-items:center; gap:6px;" }, url, openLink),
+      linkHost);
     var notes = h("textarea", { id: "g-notes", maxlength: "500", placeholder: "Size, color, where you saw it" }, gift.notes || "");
     var pendingImage = gift.imageUrl || "";
     var thumbPreview = h("img", { class: "modal-thumb", alt: "", src: pendingImage, hidden: !pendingImage, onerror: function () { thumbPreview.hidden = true; } });
@@ -1209,9 +1224,12 @@ const dbase = getFirestore(app);
     var thumb = g.imageUrl
       ? h("img", { class: "g-thumb", src: g.imageUrl, alt: "", loading: "lazy", onerror: function (e) { e.target.replaceWith(fallbackThumb()); } })
       : fallbackThumb();
+    var host = hostFor(g.url);
     if (g.url) {
       thumb = h("a", { class: "g-thumb-link", href: g.url, target: "_blank", rel: "noopener noreferrer", "aria-label": "Open " + (g.title || "gift") + " link", "data-tip": "Open link", onclick: function (e) { e.stopPropagation(); } }, thumb);
     }
+    var linkRow = g.url ? h("a", { class: "g-link", href: g.url, target: "_blank", rel: "noopener noreferrer", "data-tip": "Opens in a new tab", onclick: function (e) { e.stopPropagation(); } },
+      svg(ICON_EXTERNAL), h("span", { text: host ? "View on " + host : "View item" })) : null;
     return h("li", { class: "gift" },
       h("div", { class: "g-main" }, h("div", { class: "g-line" }, thumb,
         h("div", { style: "min-width:0; flex:1;" },
@@ -1219,6 +1237,7 @@ const dbase = getFirestore(app);
             g.price != null ? h("span", { class: "g-price", text: money(g.price) }) : null,
             h("div", { class: "g-title", title: g.title || "" }, h("button", { class: "g-title-btn", type: "button", text: truncate(g.title, 35), onclick: function () { giftModal(g); } }))),
           g.notes ? h("div", { class: "g-note", text: g.notes }) : null,
+          linkRow,
           meta.length ? h("div", { class: "g-meta", text: meta.join(" · ") }) : null))),
       h("div", { class: "g-side" },
         pill));
