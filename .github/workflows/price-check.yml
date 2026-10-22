@@ -1,0 +1,37 @@
+name: Check gift prices
+
+on:
+  schedule:
+    - cron: '0 13 * * *'   # ~9am US Eastern, daily
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  check-prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate service account secret
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "FIREBASE_SERVICE_ACCOUNT secret is empty or missing" >&2
+            exit 1
+          fi
+          echo "$FIREBASE_SERVICE_ACCOUNT" > /tmp/service-account.json
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Install dependencies
+        run: npm install --prefix scripts --no-audit --no-fund
+
+      - name: Check prices
+        run: node scripts/check-prices.mjs
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/service-account.json

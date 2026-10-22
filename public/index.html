@@ -393,6 +393,12 @@ button.stat:active { opacity: .55; }
 .link-banner.error { background: rgba(255,69,58,.12); color: var(--red); }
 .g-side { text-align: right; display: flex; align-items: center; gap: 6px; flex: none; }
 .g-price { flex: none; font: var(--tx-subhead); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--label); white-space: nowrap; }
+.g-price.was { color: var(--label-3); text-decoration: line-through; font-weight: 600; }
+.price-drop { display: inline-flex; align-items: center; gap: 4px; margin-top: 3px; border: 0; background: rgba(48,209,88,.14); color: var(--green); font: var(--tx-caption1); font-weight: 700; padding: 3px 8px; border-radius: 999px; cursor: pointer; }
+.price-drop svg { width: 11px; height: 11px; flex: none; }
+.price-drop:hover { background: rgba(48,209,88,.22); }
+.price-drop-banner { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-control); background: rgba(48,209,88,.14); color: var(--green); font: var(--tx-subhead); font-weight: 600; margin-bottom: 12px; }
+.price-drop-banner svg { width: 17px; height: 17px; flex: none; }
 
 /* status: a tappable pill badge, colored by status, that doubles as a select for changing it */
 .status-select {
@@ -754,6 +760,7 @@ const dbase = getFirestore(app);
   var ICON_EXTERNAL = "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3";
   var ICON_CHECK = "M20 6L9 17l-5-5";
   var ICON_ALERT = "M12 9v4M12 17h.01M10.3 3.9L2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z";
+  var ICON_TREND_DOWN = "M3 7l6 6 4-4 8 8M15 17h6v-6";
   var STATUS_ICON = { idea: ICON_IDEA, bought: ICON_BAG, wrapped: ICON_GIFT };
   var CHIP_ICON = { all: ICON_LIST, idea: ICON_IDEA, bought: ICON_BAG, wrapped: ICON_GIFT };
 
@@ -1259,14 +1266,25 @@ const dbase = getFirestore(app);
     }
     var linkRow = g.url ? h("a", { class: "g-link", href: g.url, target: "_blank", rel: "noopener noreferrer", "data-tip": "Opens in a new tab", onclick: function (e) { e.stopPropagation(); } },
       svg(ICON_EXTERNAL), h("span", { text: host ? "View on " + host : "View item" })) : null;
+    var priceBadge = g.priceDropped && g.priceNow != null ? h("button", { class: "price-drop", type: "button", "data-tip": "Tap to update the saved price", onclick: function (e) {
+      e.stopPropagation();
+      var snapshot = Object.assign({}, g);
+      guard(updateDoc(giftDoc(g.id), { price: g.priceNow, priceDropped: false, priceWas: null, priceNow: null, priceDropAt: null }), "Price updated").then(function (ok) {
+        if (!ok) return;
+        toast("Updated to " + money(g.priceNow), { actionLabel: "Undo", duration: 6000, onAction: function () {
+          guard(updateDoc(giftDoc(g.id), { price: snapshot.price, priceDropped: snapshot.priceDropped || false, priceWas: snapshot.priceWas != null ? snapshot.priceWas : null, priceNow: snapshot.priceNow != null ? snapshot.priceNow : null, priceDropAt: snapshot.priceDropAt || null }));
+        } });
+      });
+    } }, svg(ICON_TREND_DOWN), h("span", { text: "Now " + money(g.priceNow) })) : null;
     return h("li", { class: "gift" },
       h("div", { class: "g-main" }, h("div", { class: "g-line" }, thumb,
         h("div", { style: "min-width:0; flex:1;" },
           h("div", { class: "g-title-row" },
-            g.price != null ? h("span", { class: "g-price", text: money(g.price) }) : null,
+            g.price != null ? h("span", { class: "g-price" + (priceBadge ? " was" : ""), text: money(g.price) }) : null,
             h("div", { class: "g-title", title: g.title || "" }, h("button", { class: "g-title-btn", type: "button", text: truncate(g.title, 35), onclick: function () { giftModal(g); } }))),
           g.notes ? h("div", { class: "g-note", text: g.notes }) : null,
           linkRow,
+          priceBadge,
           meta.length ? h("div", { class: "g-meta", text: meta.join(" · ") }) : null))),
       h("div", { class: "g-side" },
         pill));
@@ -1324,6 +1342,13 @@ const dbase = getFirestore(app);
     $("#title-icon").textContent = state.boardIcon || "";
     var banner = $("#banner"); banner.textContent = "";
     if (state.error) banner.appendChild(h("div", { class: "notice", text: state.error }));
+    else {
+      var dropped = state.gifts.filter(function (g) { return g.priceDropped; });
+      if (dropped.length) {
+        banner.appendChild(h("div", { class: "price-drop-banner" }, svg(ICON_TREND_DOWN),
+          h("span", { text: dropped.length === 1 ? "The price dropped on “" + truncate(dropped[0].title || "an item", 40) + "”." : dropped.length + " items have a lower price now." })));
+      }
+    }
     $("#invite").hidden = !!state.error;
     fillPersonFilter();
     renderStats(); renderHeroBudget(); renderChips(); renderViewTabs();
