@@ -261,6 +261,7 @@ button.brand-lockup { border: 0; background: transparent; padding: 0; cursor: po
 .icon-btn { border: 0; background: transparent; color: var(--label-2); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 7px; }
 .icon-btn:hover { background: var(--fill-2); color: var(--label); }
 .icon-btn svg { width: 18px; height: 18px; }
+.icon-btn.active { color: var(--green); }
 /* custom hover tooltip (native title's timing/visibility is inconsistent
    across browsers) — reuses --label/--bg so it auto-inverts per theme */
 [data-tip] { position: relative; }
@@ -592,6 +593,9 @@ button.stat:active { opacity: .55; }
         <button class="icon-btn" id="show-activity" type="button" aria-label="Activity" data-tip="Activity">
           <svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
         </button>
+        <button class="icon-btn" id="notif-toggle" type="button" aria-label="Price-drop alerts" data-tip="Price-drop alerts" hidden>
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9zM10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        </button>
         <button class="nav-new-btn" id="board-new-list" type="button" aria-label="Create a new list">
           <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
         </button>
@@ -661,8 +665,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {
   getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, setDoc, getDoc, getDocs, onSnapshot, serverTimestamp,
-  query, orderBy, limit
+  query, orderBy, limit, arrayUnion, arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getMessaging, getToken, deleteToken, onMessage, isSupported as messagingIsSupported } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
 // --- Fill this in with the config from Firebase console > Project settings > Your apps ---
 const firebaseConfig = {
@@ -677,6 +682,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const dbase = getFirestore(app);
+
+// Web Push (price-drop alerts) — key pair from Firebase console > Project
+// settings > Cloud Messaging > Web configuration > Web Push certificates.
+const VAPID_KEY = "BJNnS2u6z_jO-4mS555wxD9O7viJxa1T3lNh7S7isa7o314gxKQAf8SHJ0ujSTmCHzDInMYc34GMJyQvDFFgAr8";
 
 (function () {
   "use strict";
@@ -1451,6 +1460,74 @@ const dbase = getFirestore(app);
       h("div", { class: "actions" }, h("button", { class: "btn", type: "button", text: "Close", onclick: closeModal })));
     openModal(form);
   }
+  /* ---- price-drop push notifications ---- */
+  function userProfileDoc() { return doc(dbase, "users", state.uid); }
+  function notifSupported() { return "Notification" in window && "serviceWorker" in navigator && window.isSecureContext; }
+
+  function updateNotifBtn() {
+    var btn = $("#notif-toggle");
+    if (!state.uid || !notifSupported()) { btn.hidden = true; return; }
+    btn.hidden = false;
+    var on = Notification.permission === "granted" && !!localStorage.getItem("wrapsheet-push-token");
+    btn.classList.toggle("active", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.setAttribute("data-tip", on ? "Price-drop alerts on — tap to turn off" : "Get notified when a price drops");
+  }
+
+  function enablePushAlerts() {
+    if (Notification.permission === "denied") {
+      toast("Notifications are blocked for this site — enable them in your browser's site settings, then try again.");
+      return;
+    }
+    Notification.requestPermission().then(function (perm) {
+      if (perm !== "granted") { toast("Alerts need notification permission to work."); return; }
+      navigator.serviceWorker.register("/firebase-messaging-sw.js").then(function (reg) {
+        var messaging = getMessaging(app);
+        return getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+      }).then(function (token) {
+        if (!token) { toast("Couldn't set up alerts on this device."); return; }
+        return setDoc(userProfileDoc(), { fcmTokens: arrayUnion(token) }, { merge: true }).then(function () {
+          localStorage.setItem("wrapsheet-push-token", token);
+          updateNotifBtn();
+          toast("Price-drop alerts are on for this device");
+        });
+      }).catch(function (e) { console.error(e); toast("Couldn't turn on alerts — try again in a bit."); });
+    });
+  }
+
+  function disablePushAlerts() {
+    var token = localStorage.getItem("wrapsheet-push-token");
+    var messaging = getMessaging(app);
+    Promise.resolve(token ? updateDoc(userProfileDoc(), { fcmTokens: arrayRemove(token) }).catch(function () {}) : null)
+      .then(function () { return deleteToken(messaging).catch(function () {}); })
+      .then(function () {
+        localStorage.removeItem("wrapsheet-push-token");
+        updateNotifBtn();
+        toast("Price-drop alerts turned off for this device");
+      });
+  }
+
+  $("#notif-toggle").addEventListener("click", function () {
+    if (!state.uid) return;
+    var on = Notification.permission === "granted" && !!localStorage.getItem("wrapsheet-push-token");
+    if (on) disablePushAlerts(); else enablePushAlerts();
+  });
+
+  if (notifSupported()) {
+    try {
+      messagingIsSupported().then(function (ok) {
+        if (!ok) return;
+        navigator.serviceWorker.register("/firebase-messaging-sw.js").then(function () {
+          var messaging = getMessaging(app);
+          onMessage(messaging, function (payload) {
+            var n = payload.notification || {};
+            toast(n.title ? (n.title + (n.body ? " — " + n.body : "")) : "A price dropped on one of your gifts");
+          });
+        }).catch(function () {});
+      }).catch(function () {});
+    } catch (e) { /* messaging not supported in this browser */ }
+  }
+
   $("#invite").addEventListener("click", inviteModal);
   $("#show-activity").addEventListener("click", activityModal);
   $("#add-person").addEventListener("click", function () { personModal(); });
@@ -1748,6 +1825,7 @@ const dbase = getFirestore(app);
     state.uid = user.uid;
     state.name = user.displayName || (user.email ? user.email.split("@")[0] : "you");
     state.photoURL = user.photoURL || null;
+    updateNotifBtn();
   } };
 })();
 
