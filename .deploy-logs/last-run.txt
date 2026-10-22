@@ -6,18 +6,12 @@ npm warn deprecated glob@10.5.0: Old versions of glob are not supported, and con
 
 [1m[37m===[39m Deploying to 'ourwrapsheet'...[22m
 
-[36m[1mi [22m[39m deploying [1mhosting[22m
-[36m[1mi  hosting[ourwrapsheet]:[22m[39m beginning deploy...
-[36m[1mi  hosting[ourwrapsheet]:[22m[39m found 9 files in [1mpublic[22m
-[36m[1mi  hosting:[22m[39m upload complete
-[32m[1m✔  hosting[ourwrapsheet]:[22m[39m file upload complete
-[36m[1mi  hosting[ourwrapsheet]:[22m[39m finalizing version...
-[32m[1m✔  hosting[ourwrapsheet]:[22m[39m version finalized
-[36m[1mi  hosting[ourwrapsheet]:[22m[39m releasing new version...
-[32m[1m✔  hosting[ourwrapsheet]:[22m[39m release complete
+[36m[1mi [22m[39m deploying [1mfirestore, hosting[22m
+[36m[1mi  firestore:[22m[39m ensuring required API [1mfirestore.googleapis.com[22m is enabled...
+[32m[1m✔  firestore:[22m[39m required API [1mfirestore.googleapis.com[22m is enabled
+[36m[1mi  firestore:[22m[39m ensuring required API [1mfirestore.googleapis.com[22m is enabled...
+[36m[1mi [22m[39m [1m[36mfirestore:[39m[22m reading indexes from [1mfirestore.indexes.json[22m...
+[36m[1mi  cloud.firestore:[22m[39m checking [1mfirestore.rules[22m for compilation errors...
 
-[32m[1m✔ [22m[39m [1m[4mDeploy complete![24m[22m
-
-[1mProject Console:[22m https://console.firebase.google.com/project/ourwrapsheet/overview
-[1mHosting URL:[22m https://ourwrapsheet.web.app
-EXIT_CODE=0
+[1m[31mError:[39m[22m Request to https://firebaserules.googleapis.com/v1/projects/ourwrapsheet:test had HTTP Error: 403, The caller does not have permission
+EXIT_CODE=1
