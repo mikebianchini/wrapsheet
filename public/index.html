@@ -1109,9 +1109,16 @@ const VAPID_KEY = "BJNnS2u6z_jO-4mS555wxD9O7viJxa1T3lNh7S7isa7o314gxKQAf8SHJ0ujS
   function personModal(person) {
     var editing = !!person; person = person || {};
     var name = h("input", { id: "p-name", type: "text", maxlength: "60", placeholder: "Name", value: person.name || "" });
-    var grpList = h("datalist", { id: "p-group-list" });
-    boardGroups().forEach(function (g) { grpList.appendChild(h("option", { value: g })); });
-    var grp = h("input", { id: "p-group", type: "text", list: "p-group-list", maxlength: "40", placeholder: "Family", value: person.group || "" });
+    var currentGroup = person.group || "Family";
+    var grp = h("select", { id: "p-group" });
+    boardGroups().forEach(function (g) { var o = h("option", { value: g, text: g }); if (g === currentGroup) o.selected = true; grp.appendChild(o); });
+    grp.appendChild(h("option", { value: "__new__", text: "+ Add new group…" }));
+    var grpNew = h("input", { id: "p-group-new", type: "text", maxlength: "40", placeholder: "New group name" });
+    var grpNewWrap = h("div", { id: "p-group-new-wrap", hidden: true }, field("p-group-new", "New group name", grpNew));
+    grp.addEventListener("change", function () {
+      grpNewWrap.hidden = grp.value !== "__new__";
+      if (!grpNewWrap.hidden) grpNew.focus();
+    });
     var budget = h("input", { id: "p-budget", type: "number", min: "0", step: "1", inputmode: "decimal", placeholder: "Optional", value: person.budget != null ? person.budget : "" });
     var prefs = h("textarea", { id: "p-notes", maxlength: "300", placeholder: "Sizes, favorite colors, allergies, wish-list notes..." }, person.notes || "");
     var confirmDel = false;
@@ -1135,7 +1142,8 @@ const VAPID_KEY = "BJNnS2u6z_jO-4mS555wxD9O7viJxa1T3lNh7S7isa7o314gxKQAf8SHJ0ujS
     var form = h("form", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": editing ? "Edit recipient" : "Add recipient", onsubmit: function (e) {
       e.preventDefault();
       var n = name.value.trim(); if (!n) { name.focus(); return; }
-      var data = { name: n, group: grp.value.trim() || "Family", budget: num(budget.value), notes: prefs.value.trim() };
+      var groupVal = grp.value === "__new__" ? grpNew.value.trim() : grp.value;
+      var data = { name: n, group: groupVal || "Family", budget: num(budget.value), notes: prefs.value.trim() };
       var p;
       if (editing) p = updateDoc(personDoc(person.id), data);
       else { data.createdAt = Date.now(); p = addDoc(peopleCol(), data); }
@@ -1147,7 +1155,7 @@ const VAPID_KEY = "BJNnS2u6z_jO-4mS555wxD9O7viJxa1T3lNh7S7isa7o314gxKQAf8SHJ0ujS
       h("h3", { text: editing ? "Edit Recipient" : "Add Recipient" }),
       field("p-name", "Name", name),
       h("div", { class: "row2" }, field("p-group", "Group", grp), field("p-budget", "Budget (USD)", budget)),
-      grpList,
+      grpNewWrap,
       field("p-notes", "Gift preferences (optional)", prefs),
       h("div", { class: "actions" },
         h("button", { class: "btn filled", type: "submit", text: editing ? "Save" : "Add Recipient" }),
